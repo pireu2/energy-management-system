@@ -35,7 +35,7 @@ The system consists of the following components:
 - **Authentication**: JWT tokens
 - **Containerization**: Docker & Docker Compose
 - **Reverse Proxy**: Nginx
-- **API Documentation**: Swagger (planned)
+- **API Documentation**: Swagger
 
 ## 📋 Prerequisites
 
@@ -49,7 +49,6 @@ The system consists of the following components:
 
 ```bash
 git clone <repository-url>
-cd Assignment\ 1
 ```
 
 ### 2. Start the database
@@ -157,8 +156,8 @@ docker-compose logs user-service
 Each service has its own Dockerfile and can be deployed independently:
 
 - `user-service/Dockerfile`
-- `auth-service/Dockerfile` (to be created)
-- `device-service/Dockerfile` (to be created)
+- `auth-service/Dockerfile`
+- `device-service/Dockerfile`
 
 ## 🔧 Development
 
@@ -227,60 +226,12 @@ curl -X POST http://localhost:3001/users \
 - Environment variable configuration
 - Docker network isolation
 
-## 🚧 Current Status
-
-### Completed ✅
-
-- [x] User Service with TypeORM
-- [x] PostgreSQL database setup
-- [x] Docker containerization
-- [x] Frontend with React + Tailwind
-- [x] Basic CRUD operations
-
-### In Progress 🔄
-
-- [ ] Authentication Service
-- [ ] Device Service
-- [ ] API Gateway setup
-- [ ] Frontend integration
-
-### Planned 📅
-
-- [ ] Swagger documentation
-- [ ] Unit tests
-- [ ] Integration tests
-- [ ] Production deployment
-- [ ] Monitoring and logging
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/new-feature`
-3. Commit changes: `git commit -am 'Add new feature'`
-4. Push to branch: `git push origin feature/new-feature`
-5. Submit a pull request
-
 ## 📝 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 👥 Authors
 
-- Student Name - Initial work
-
-## 🎓 Academic Context
-
-This project is developed as Assignment 1 for the Distributed Systems course at the Faculty of Automation and Computer Science, Computer Science Department, under the guidance of:
-
-- Prof. Tudor Cioara
-- S.l. Marcel Antal
-- Conf. Cristina Pop
-- And other faculty members
-
-## 📞 Support
-
-For questions and support, please contact the development team or refer to the course materials.
-
----
+- Duica Sebastian
 
 **Note**: This is an educational project developed for learning distributed systems concepts and microservices architecture.
