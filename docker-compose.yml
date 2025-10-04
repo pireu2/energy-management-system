@@ -1,0 +1,23 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: energy-postgres
+    environment:
+      POSTGRES_USER: energy_user
+      POSTGRES_PASSWORD: energy_password
+      POSTGRES_DB: energy_management
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - energy-network
+    restart: unless-stopped
+
+networks:
+  energy-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
