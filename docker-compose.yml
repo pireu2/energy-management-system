@@ -20,16 +20,41 @@ services:
     container_name: energy-user-service
     environment:
       DB_HOST: postgres
-      DB_PORT: 5432
+      DB_PORT: 5432  # Internal container port
       DB_NAME: user_management
       DB_USER: energy_user
       DB_PASSWORD: energy_password
       PORT: 3001
-      NODE_ENV: developement
+      NODE_ENV: development
     ports:
       - "3001:3001"
     depends_on:
       - postgres
+    networks:
+      - energy-network
+    restart: unless-stopped
+
+  auth-service:
+    build: ./auth-service
+    container_name: energy-auth-service
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: auth_db
+      DB_USER: energy_user
+      DB_PASSWORD: energy_password
+      PORT: 3002
+      NODE_ENV: development
+      JWT_SECRET: dG8ksW9pQ2vRxN4mF7jP1zL3bH6sA8cE5qY9wT0uI2rO4vX7nK3gD6fS1mP8hL5c
+      JWT_REFRESH_SECRET: kN7mQ2pW8tY1rE4uI9oP5aS3dF6gH0jK4lZ7xC9vB2nM6qW1eR8tY5uI3oP0aS7d
+      JWT_EXPIRES_IN: 15m
+      JWT_REFRESH_EXPIRES_IN: 7d
+      USER_SERVICE_URL: http://user-service:3001
+    ports:
+      - "3002:3002"
+    depends_on:
+      - postgres
+      - user-service
     networks:
       - energy-network
     restart: unless-stopped
