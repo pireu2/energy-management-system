@@ -20,7 +20,7 @@ services:
     container_name: energy-user-service
     environment:
       DB_HOST: postgres
-      DB_PORT: 5432  # Internal container port
+      DB_PORT: 5432 
       DB_NAME: user_management
       DB_USER: energy_user
       DB_PASSWORD: energy_password
