@@ -26,6 +26,7 @@ services:
       DB_PASSWORD: energy_password
       PORT: 3001
       NODE_ENV: development
+      DEVICE_SERVICE_URL: http://device-service:3003
     ports:
       - "3001:3001"
     depends_on:
@@ -50,11 +51,32 @@ services:
       JWT_EXPIRES_IN: 15m
       JWT_REFRESH_EXPIRES_IN: 7d
       USER_SERVICE_URL: http://user-service:3001
+      DEVICE_SERVICE_URL: http://device-service:3003
     ports:
       - "3002:3002"
     depends_on:
       - postgres
       - user-service
+      - device-service
+    networks:
+      - energy-network
+    restart: unless-stopped
+
+  device-service:
+    build: ./device-service
+    container_name: energy-device-service
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: device_management
+      DB_USER: energy_user
+      DB_PASSWORD: energy_password
+      PORT: 3003
+      NODE_ENV: development
+    ports:
+      - "3003:3003"
+    depends_on:
+      - postgres
     networks:
       - energy-network
     restart: unless-stopped

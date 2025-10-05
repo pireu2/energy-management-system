@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import { UserRepository } from "../models/UserRepository";
 
 const userRepository = new UserRepository();
+const DEVICE_SERVICE_URL =
+  process.env.DEVICE_SERVICE_URL || "http://localhost:3003";
 
 export class UserController {
   async getAllUsers(req: Request, res: Response) {
@@ -85,6 +87,21 @@ export class UserController {
         role,
       });
 
+      try {
+        const resp = await fetch(`${DEVICE_SERVICE_URL}/devices/sync/user`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: user.id, email: user.email }),
+        });
+        if (!resp.ok) {
+          console.warn(
+            `Failed to mirror user to device-service: HTTP ${resp.status}`
+          );
+        }
+      } catch (mirrorErr) {
+        console.warn("Failed to mirror user to device-service:", mirrorErr);
+      }
+
       res.status(201).json(user);
     } catch (error) {
       console.error("Error creating user:", error);
@@ -117,6 +134,14 @@ export class UserController {
         return res.status(404).json({ error: "User not found" });
       }
 
+      try {
+        await fetch(`${DEVICE_SERVICE_URL}/devices/sync/user`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: user.id, email: user.email }),
+        });
+      } catch (_) {}
+
       res.json(user);
     } catch (error) {
       console.error("Error updating user:", error);
@@ -136,6 +161,23 @@ export class UserController {
 
       if (!deleted) {
         return res.status(404).json({ error: "User not found" });
+      }
+
+      try {
+        const resp = await fetch(
+          `${DEVICE_SERVICE_URL}/devices/sync/user/${id}`,
+          { method: "DELETE" }
+        );
+        if (!resp.ok) {
+          console.warn(
+            `Failed to delete mirrored user in device-service: HTTP ${resp.status}`
+          );
+        }
+      } catch (mirrorErr) {
+        console.warn(
+          "Failed to delete mirrored user in device-service:",
+          mirrorErr
+        );
       }
 
       res.status(204).send();
