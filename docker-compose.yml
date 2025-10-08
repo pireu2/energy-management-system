@@ -81,6 +81,19 @@ services:
       - energy-network
     restart: unless-stopped
 
+  frontend:
+    build: ./frontend
+    container_name: energy-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - auth-service
+      - user-service
+      - device-service
+    networks:
+      - energy-network
+    restart: unless-stopped
+
 networks:
   energy-network:
     driver: bridge
