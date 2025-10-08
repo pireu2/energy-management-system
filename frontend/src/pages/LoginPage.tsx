@@ -9,7 +9,6 @@ export const LoginPage: React.FC = () => {
   const [error, setError] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // Redirect if already logged in
   React.useEffect(() => {
     if (user) {
       navigate("/dashboard");

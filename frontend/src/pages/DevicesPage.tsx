@@ -189,7 +189,6 @@ export const DevicesPage: React.FC = () => {
       let response;
 
       if (userId) {
-        // Assign user
         response = await fetch(
           `http://localhost:3003/devices/${deviceId}/assign/${userId}`,
           {
@@ -200,7 +199,6 @@ export const DevicesPage: React.FC = () => {
           }
         );
       } else {
-        // Unassign user
         response = await fetch(
           `http://localhost:3003/devices/${deviceId}/assign`,
           {

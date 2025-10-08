@@ -42,7 +42,6 @@ export const UsersPage: React.FC = () => {
   const [error, setError] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Redirect non-admin users
   useEffect(() => {
     if (currentUser?.role !== "admin") {
       window.location.href = "/dashboard";
