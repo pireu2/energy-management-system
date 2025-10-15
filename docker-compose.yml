@@ -94,6 +94,21 @@ services:
       - energy-network
     restart: unless-stopped
 
+  swagger-service:
+    build: ./swagger-service
+    container_name: energy-swagger-service
+    environment:
+      PORT: 3004
+    ports:
+      - "3004:3004"
+    depends_on:
+      - user-service
+      - auth-service
+      - device-service
+    networks:
+      - energy-network
+    restart: unless-stopped
+
 networks:
   energy-network:
     driver: bridge
