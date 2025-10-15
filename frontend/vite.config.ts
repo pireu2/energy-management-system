@@ -11,4 +11,16 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  // Dev server proxy: forward /api/* to the API gateway (docker-compose maps it to localhost:8080)
+  server: {
+    port: 3000,
+    proxy: {
+      "/api": {
+        target: "http://api-gateway",
+        changeOrigin: true,
+        secure: false,
+        ws: true,
+      },
+    },
+  },
 });

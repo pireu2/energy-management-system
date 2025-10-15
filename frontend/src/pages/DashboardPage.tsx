@@ -44,7 +44,7 @@ export const DashboardPage: React.FC = () => {
     try {
       const token = localStorage.getItem("accessToken");
 
-      const devicesResponse = await fetch("http://localhost:3003/devices", {
+      const devicesResponse = await fetch("/api/devices", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -65,7 +65,7 @@ export const DashboardPage: React.FC = () => {
       }
 
       if (user?.role === "admin") {
-        const usersResponse = await fetch("http://localhost:3001/users", {
+        const usersResponse = await fetch("/api/users", {
           headers: {
             Authorization: `Bearer ${token}`,
           },

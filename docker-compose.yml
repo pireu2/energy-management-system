@@ -1,16 +1,48 @@
 services:
-  postgres:
+  postgres-auth:
     image: postgres:15
-    container_name: energy-postgres
+    container_name: energy-postgres-auth
     environment:
       POSTGRES_USER: energy_user
       POSTGRES_PASSWORD: energy_password
-      POSTGRES_DB: energy_management
+      POSTGRES_DB: auth_db
     ports:
-      - "5433:5432"
+      - "5434:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_auth_data:/var/lib/postgresql/data
+      - ./database/init-auth.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - energy-network
+    restart: unless-stopped
+
+  postgres-user:
+    image: postgres:15
+    container_name: energy-postgres-user
+    environment:
+      POSTGRES_USER: energy_user
+      POSTGRES_PASSWORD: energy_password
+      POSTGRES_DB: user_management
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_user_data:/var/lib/postgresql/data
+      - ./database/init-user.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - energy-network
+    restart: unless-stopped
+
+  postgres-device:
+    image: postgres:15
+    container_name: energy-postgres-device
+    environment:
+      POSTGRES_USER: energy_user
+      POSTGRES_PASSWORD: energy_password
+      POSTGRES_DB: device_management
+    ports:
+      - "5436:5432"
+    volumes:
+      - postgres_device_data:/var/lib/postgresql/data
+      - ./database/init-device.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - energy-network
     restart: unless-stopped
@@ -19,8 +51,8 @@ services:
     build: ./user-service
     container_name: energy-user-service
     environment:
-      DB_HOST: postgres
-      DB_PORT: 5432 
+      DB_HOST: host.docker.internal
+      DB_PORT: 5435 
       DB_NAME: user_management
       DB_USER: energy_user
       DB_PASSWORD: energy_password
@@ -30,17 +62,19 @@ services:
     ports:
       - "3001:3001"
     depends_on:
-      - postgres
+      - postgres-user
     networks:
       - energy-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     restart: unless-stopped
 
   auth-service:
     build: ./auth-service
     container_name: energy-auth-service
     environment:
-      DB_HOST: postgres
-      DB_PORT: 5432
+      DB_HOST: host.docker.internal
+      DB_PORT: 5434
       DB_NAME: auth_db
       DB_USER: energy_user
       DB_PASSWORD: energy_password
@@ -55,19 +89,21 @@ services:
     ports:
       - "3002:3002"
     depends_on:
-      - postgres
+      - postgres-auth
       - user-service
       - device-service
     networks:
       - energy-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     restart: unless-stopped
 
   device-service:
     build: ./device-service
     container_name: energy-device-service
     environment:
-      DB_HOST: postgres
-      DB_PORT: 5432
+      DB_HOST: host.docker.internal
+      DB_PORT: 5436
       DB_NAME: device_management
       DB_USER: energy_user
       DB_PASSWORD: energy_password
@@ -76,20 +112,20 @@ services:
     ports:
       - "3003:3003"
     depends_on:
-      - postgres
+      - postgres-device
     networks:
       - energy-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     restart: unless-stopped
 
   frontend:
     build: ./frontend
     container_name: energy-frontend
     ports:
-      - "3000:3000"
+      - "3000:80"
     depends_on:
-      - auth-service
-      - user-service
-      - device-service
+      - api-gateway
     networks:
       - energy-network
     restart: unless-stopped
@@ -109,9 +145,25 @@ services:
       - energy-network
     restart: unless-stopped
 
+  api-gateway:
+    build: ./api-gateaway
+    container_name: energy-api-gateway
+    ports:
+      - "8080:80"
+    depends_on:
+      - auth-service
+      - user-service
+      - device-service
+      - swagger-service
+    networks:
+      - energy-network
+    restart: unless-stopped
+
 networks:
   energy-network:
     driver: bridge
 
 volumes:
-  postgres_data:
+  postgres_auth_data:
+  postgres_user_data:
+  postgres_device_data:

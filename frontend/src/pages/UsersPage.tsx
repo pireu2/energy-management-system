@@ -53,7 +53,7 @@ export const UsersPage: React.FC = () => {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await fetch("http://localhost:3001/users", {
+      const response = await fetch("/api/users", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -85,9 +85,7 @@ export const UsersPage: React.FC = () => {
 
     try {
       const token = localStorage.getItem("accessToken");
-      const url = editingUser
-        ? `http://localhost:3001/users/${editingUser.id}`
-        : "http://localhost:3001/users";
+      const url = editingUser ? `/api/users/${editingUser.id}` : "/api/users";
 
       const response = await fetch(url, {
         method: editingUser ? "PUT" : "POST",
@@ -122,7 +120,7 @@ export const UsersPage: React.FC = () => {
 
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await fetch(`http://localhost:3001/users/${userId}`, {
+      const response = await fetch(`/api/users/${userId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,

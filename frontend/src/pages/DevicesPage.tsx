@@ -74,7 +74,7 @@ export const DevicesPage: React.FC = () => {
   const fetchDevices = async () => {
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await fetch("http://localhost:3003/devices", {
+      const response = await fetch("/api/devices", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -96,7 +96,7 @@ export const DevicesPage: React.FC = () => {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await fetch("http://localhost:3001/users", {
+      const response = await fetch("/api/users", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -131,8 +131,8 @@ export const DevicesPage: React.FC = () => {
     try {
       const token = localStorage.getItem("accessToken");
       const url = editingDevice
-        ? `http://localhost:3003/devices/${editingDevice.id}`
-        : "http://localhost:3003/devices";
+        ? `/api/devices/${editingDevice.id}`
+        : "/api/devices";
 
       const response = await fetch(url, {
         method: editingDevice ? "PUT" : "POST",
@@ -162,15 +162,12 @@ export const DevicesPage: React.FC = () => {
 
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await fetch(
-        `http://localhost:3003/devices/${deviceId}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`/api/devices/${deviceId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (response.ok) {
         await fetchDevices();
@@ -189,25 +186,19 @@ export const DevicesPage: React.FC = () => {
       let response;
 
       if (userId) {
-        response = await fetch(
-          `http://localhost:3003/devices/${deviceId}/assign/${userId}`,
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        response = await fetch(`/api/devices/${deviceId}/assign/${userId}`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
       } else {
-        response = await fetch(
-          `http://localhost:3003/devices/${deviceId}/assign`,
-          {
-            method: "DELETE",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        response = await fetch(`/api/devices/${deviceId}/assign`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
       }
 
       if (response.ok) {
