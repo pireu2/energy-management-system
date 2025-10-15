@@ -2,18 +2,21 @@
 
 A distributed microservices-based Energy Management System that allows authenticated users to access, monitor, and manage smart energy metering devices. Built with containerized microservices architecture using Docker.
 
-## 🏗️ Architecture
+## Architecture
+
+![Deployment Diagram](deployment.png)
 
 The system consists of the following components:
 
 - **Frontend Application**: React + TypeScript + Tailwind CSS web interface
-- **API Gateway**: Nginx reverse proxy for request routing and load balancing
+- **API Gateway**: Nginx reverse proxy for request routing, load balancing, and authentication
 - **Authentication Service**: Handles user authentication and JWT token management
 - **User Management Service**: Manages user profiles and role-based access
 - **Device Management Service**: Handles energy device CRUD operations
-- **PostgreSQL Database**: Persistent data storage for all services
+- **Swagger API Documentation Service**: Provides interactive API documentation
+- **PostgreSQL Databases**: Separate PostgreSQL instances for each service (auth, user, device)
 
-## 🚀 Features
+## Features
 
 ### User Roles
 
@@ -26,8 +29,9 @@ The system consists of the following components:
 - **Auth Service**: Secure authentication with JWT tokens
 - **Device Service**: Energy device management with consumption tracking
 - **API Gateway**: Centralized routing, authentication, and authorization
+- **Swagger API Documentation**: Interactive API docs for all services
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 - **Frontend**: React 19, TypeScript, Vite, Tailwind CSS
 - **Backend**: Node.js, Express, TypeScript
@@ -37,13 +41,13 @@ The system consists of the following components:
 - **Reverse Proxy**: Nginx
 - **API Documentation**: Swagger
 
-## 📋 Prerequisites
+## Prerequisites
 
 - Docker and Docker Compose
 - Node.js 18+ (for local development)
 - npm or yarn
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Clone the repository
 
@@ -51,10 +55,10 @@ The system consists of the following components:
 git clone <repository-url>
 ```
 
-### 2. Start the database
+### 2. Start the databases
 
 ```bash
-docker-compose up postgres -d
+docker-compose up postgres-auth postgres-user postgres-device -d
 ```
 
 ### 3. Run all services
@@ -80,22 +84,24 @@ cd frontend && npm install && npm run dev
 ### 4. Access the application
 
 - Frontend: http://localhost:3000
+- API Gateway: http://localhost:8080
+- Swagger Documentation: http://localhost:3004
 - User Service: http://localhost:3001
 - Auth Service: http://localhost:3002
 - Device Service: http://localhost:3003
-- Database: localhost:5433 (PostgreSQL)
+- Databases: localhost:5434 (auth), localhost:5435 (user), localhost:5436 (device)
 
-## 🗄️ Database Setup
+## Database Setup
 
-The system uses PostgreSQL with separate databases for each service:
+The system uses separate PostgreSQL instances for each service:
 
-- `user_management` - User profiles
-- `auth_db` - Authentication credentials
-- `device_management` - Device information
+- `auth_db` on localhost:5434 - Authentication credentials
+- `user_management` on localhost:5435 - User profiles
+- `device_management` on localhost:5436 - Device information
 
 Database initialization happens automatically via Docker init scripts.
 
-## 📡 API Endpoints
+## API Endpoints
 
 ### User Service (Port 3001)
 
@@ -129,7 +135,7 @@ DELETE /devices/:id            - Delete device
 GET    /devices/user/:userId   - Get devices by user
 ```
 
-## 🐳 Docker Services
+## Docker Services
 
 ### Available Docker Commands
 
@@ -138,8 +144,15 @@ GET    /devices/user/:userId   - Get devices by user
 docker-compose up
 
 # Start specific service
-docker-compose up postgres
+docker-compose up postgres-auth
+docker-compose up postgres-user
+docker-compose up postgres-device
 docker-compose up user-service
+docker-compose up auth-service
+docker-compose up device-service
+docker-compose up swagger-service
+docker-compose up api-gateway
+docker-compose up frontend
 
 # Build and start
 docker-compose up --build
@@ -158,8 +171,10 @@ Each service has its own Dockerfile and can be deployed independently:
 - `user-service/Dockerfile`
 - `auth-service/Dockerfile`
 - `device-service/Dockerfile`
+- `swagger-service/Dockerfile`
+- `api-gateaway/Dockerfile`
 
-## 🔧 Development
+## Development
 
 ### Environment Variables
 
@@ -169,11 +184,42 @@ Each service uses environment variables for configuration:
 
 ```
 DB_HOST=localhost
-DB_PORT=5433
+DB_PORT=5435
 DB_NAME=user_management
 DB_USER=energy_user
 DB_PASSWORD=energy_password
 PORT=3001
+NODE_ENV=development
+DEVICE_SERVICE_URL=http://localhost:3003
+```
+
+**Auth Service (.env)**
+
+```
+DB_HOST=localhost
+DB_PORT=5434
+DB_NAME=auth_db
+DB_USER=energy_user
+DB_PASSWORD=energy_password
+PORT=3002
+NODE_ENV=development
+JWT_SECRET=dG8ksW9pQ2vRxN4mF7jP1zL3bH6sA8cE5qY9wT0uI2rO4vX7nK3gD6fS1mP8hL5c
+JWT_REFRESH_SECRET=kN7mQ2pW8tY1rE4uI9oP5aS3dF6gH0jK4lZ7xC9vB2nM6qW1eR8tY5uI3oP0aS7d
+JWT_EXPIRES_IN=15m
+JWT_REFRESH_EXPIRES_IN=7d
+USER_SERVICE_URL=http://localhost:3001
+DEVICE_SERVICE_URL=http://localhost:3003
+```
+
+**Device Service (.env)**
+
+```
+DB_HOST=localhost
+DB_PORT=5436
+DB_NAME=device_management
+DB_USER=energy_user
+DB_PASSWORD=energy_password
+PORT=3003
 NODE_ENV=development
 ```
 
@@ -199,7 +245,7 @@ service-name/
 └── tsconfig.json
 ```
 
-## 🧪 Testing
+## Testing
 
 ### API Testing with curl
 
@@ -218,7 +264,7 @@ curl -X POST http://localhost:3001/users \
   }'
 ```
 
-## 🔐 Security
+## Security
 
 - JWT-based authentication
 - Role-based access control (RBAC)
@@ -226,11 +272,11 @@ curl -X POST http://localhost:3001/users \
 - Environment variable configuration
 - Docker network isolation
 
-## 📝 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 👥 Authors
+## Authors
 
 - Duica Sebastian
 
