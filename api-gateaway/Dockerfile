@@ -1,4 +1,4 @@
-FROM nginx:stable-alpine
+FROM nginx:1.29.2-alpine
 
 RUN rm /etc/nginx/conf.d/default.conf || true
 COPY nginx.conf /etc/nginx/nginx.conf

@@ -146,7 +146,7 @@ export const UsersPage: React.FC = () => {
   );
 
   if (currentUser?.role !== "admin") {
-    return null; // Will redirect in useEffect
+    return null;
   }
 
   if (loading) {
@@ -252,7 +252,7 @@ export const UsersPage: React.FC = () => {
                     required
                     defaultValue={editingUser?.email || ""}
                     placeholder="john.doe@example.com"
-                    disabled={!!editingUser} // Can't change email for existing users
+                    disabled={!!editingUser}
                   />
                   {editingUser && (
                     <p className="text-xs text-gray-500 mt-1">
@@ -384,7 +384,7 @@ export const UsersPage: React.FC = () => {
                     size="sm"
                     variant="destructive"
                     onClick={() => handleDelete(user.id)}
-                    disabled={user.email === currentUser?.email} // Can't delete yourself
+                    disabled={user.email === currentUser?.email}
                     className="flex items-center gap-1"
                   >
                     <MdDelete />
