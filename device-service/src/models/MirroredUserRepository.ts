@@ -28,8 +28,8 @@ export class MirroredUserRepository {
   }
 
   async create(userData: CreateMirroredUserRequest): Promise<MirroredUser> {
-    const user = this.repository.create(userData);
-    return await this.repository.save(user);
+    await this.repository.upsert(userData, ["id"]);
+    return (await this.repository.findOneBy({ id: userData.id }))!;
   }
 
   async update(

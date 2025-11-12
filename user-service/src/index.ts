@@ -4,6 +4,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import initializeDatabase from "./config/init";
 import userRoutes from "./routes/userRoutes";
+import { connectRabbitMQ } from "./config/rabbitmq";
 
 dotenv.config();
 
@@ -22,12 +23,10 @@ app.get("/health", (req, res) => {
 const startServer = async () => {
   try {
     await initializeDatabase();
-    console.log("Database initialized successfully");
+    await connectRabbitMQ();
 
     app.listen(PORT, () => {
       console.log(`User service running on port ${PORT}`);
-      console.log(`Health check: http://localhost:${PORT}/health`);
-      console.log(`Users API: http://localhost:${PORT}/users`);
     });
   } catch (error) {
     console.error("Failed to start server:", error);

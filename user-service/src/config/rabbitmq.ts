@@ -3,7 +3,7 @@ import amqp from "amqplib";
 const RABBITMQ_URL =
   process.env.RABBITMQ_URL ||
   "amqp://energy_user:energy_password@localhost:5672";
-const SYNC_QUEUE = "sync_queue";
+const SYNC_EXCHANGE = "sync_exchange";
 
 let connection: amqp.Connection | null = null;
 let channel: amqp.Channel | null = null;
@@ -14,7 +14,6 @@ export async function connectRabbitMQ(): Promise<amqp.Channel> {
       return channel;
     }
 
-    console.log("Connecting to RabbitMQ...");
     connection = (await amqp.connect(RABBITMQ_URL)) as any;
     channel = await (connection as any).createChannel();
 
@@ -22,9 +21,7 @@ export async function connectRabbitMQ(): Promise<amqp.Channel> {
       throw new Error("Failed to create channel");
     }
 
-    await channel.assertQueue(SYNC_QUEUE, { durable: true });
-
-    console.log("✓ RabbitMQ connected successfully");
+    await channel.assertExchange(SYNC_EXCHANGE, "fanout", { durable: true });
 
     (connection as any).on("error", (err: Error) => {
       console.error("RabbitMQ connection error:", err);
@@ -33,7 +30,6 @@ export async function connectRabbitMQ(): Promise<amqp.Channel> {
     });
 
     (connection as any).on("close", () => {
-      console.log("RabbitMQ connection closed");
       channel = null;
       connection = null;
     });
@@ -53,7 +49,9 @@ export async function publishSyncEvent(
     const ch = await connectRabbitMQ();
     const message = { type, data };
     const content = Buffer.from(JSON.stringify(message));
-    return ch.sendToQueue(SYNC_QUEUE, content, { persistent: true });
+
+    ch.publish(SYNC_EXCHANGE, "", content, { persistent: true });
+    return true;
   } catch (error) {
     console.error(`Failed to publish sync event:`, error);
     return false;
@@ -64,7 +62,6 @@ export async function closeRabbitMQ() {
   try {
     if (channel) await channel.close();
     if (connection) await (connection as any).close();
-    console.log("RabbitMQ connection closed");
   } catch (error) {
     console.error("Error closing RabbitMQ connection:", error);
   }

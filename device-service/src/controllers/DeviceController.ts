@@ -106,7 +106,8 @@ export class DeviceController {
         id: device.id,
         name: device.name,
         maximumConsumption: device.maximumConsumption,
-        assignedUserId: device.assignedUserId,
+        assignedUserId:
+          device.assignedUserId !== undefined ? device.assignedUserId : null,
       });
 
       res.status(201).json(device);
@@ -168,7 +169,8 @@ export class DeviceController {
         id: device.id,
         name: device.name,
         maximumConsumption: device.maximumConsumption,
-        assignedUserId: device.assignedUserId,
+        assignedUserId:
+          device.assignedUserId !== undefined ? device.assignedUserId : null,
       });
 
       res.json(device);
@@ -224,7 +226,8 @@ export class DeviceController {
         id: device.id,
         name: device.name,
         maximumConsumption: device.maximumConsumption,
-        assignedUserId: device.assignedUserId,
+        assignedUserId:
+          device.assignedUserId !== undefined ? device.assignedUserId : null,
       });
 
       res.json(device);
@@ -250,7 +253,8 @@ export class DeviceController {
         id: device.id,
         name: device.name,
         maximumConsumption: device.maximumConsumption,
-        assignedUserId: device.assignedUserId,
+        assignedUserId:
+          device.assignedUserId !== undefined ? device.assignedUserId : null,
       });
 
       res.json(device);

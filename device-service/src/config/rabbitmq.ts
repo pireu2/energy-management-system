@@ -3,18 +3,24 @@ import amqp from "amqplib";
 const RABBITMQ_URL =
   process.env.RABBITMQ_URL ||
   "amqp://energy_user:energy_password@localhost:5672";
-const SYNC_QUEUE = "sync_queue";
+const SYNC_EXCHANGE = "sync_exchange";
+const DEVICE_SERVICE_QUEUE = "sync_queue_device_service";
 
 let connection: amqp.Connection | null = null;
 let channel: amqp.Channel | null = null;
 
 export async function connectRabbitMQ(): Promise<amqp.Channel> {
   try {
-    if (channel) {
-      return channel;
+    if (channel && connection) {
+      try {
+        await channel.checkQueue(DEVICE_SERVICE_QUEUE);
+        return channel;
+      } catch (e) {
+        channel = null;
+        connection = null;
+      }
     }
 
-    console.log("Connecting to RabbitMQ...");
     connection = (await amqp.connect(RABBITMQ_URL)) as any;
     channel = await (connection as any).createChannel();
 
@@ -22,9 +28,9 @@ export async function connectRabbitMQ(): Promise<amqp.Channel> {
       throw new Error("Failed to create channel");
     }
 
-    await channel.assertQueue(SYNC_QUEUE, { durable: true });
-
-    console.log("✓ RabbitMQ connected successfully");
+    await channel.assertExchange(SYNC_EXCHANGE, "fanout", { durable: true });
+    await channel.assertQueue(DEVICE_SERVICE_QUEUE, { durable: true });
+    await channel.bindQueue(DEVICE_SERVICE_QUEUE, SYNC_EXCHANGE, "");
 
     (connection as any).on("error", (err: Error) => {
       console.error("RabbitMQ connection error:", err);
@@ -33,7 +39,6 @@ export async function connectRabbitMQ(): Promise<amqp.Channel> {
     });
 
     (connection as any).on("close", () => {
-      console.log("RabbitMQ connection closed");
       channel = null;
       connection = null;
     });
@@ -41,6 +46,8 @@ export async function connectRabbitMQ(): Promise<amqp.Channel> {
     return channel;
   } catch (error) {
     console.error("Failed to connect to RabbitMQ:", error);
+    channel = null;
+    connection = null;
     throw error;
   }
 }
@@ -49,15 +56,28 @@ export async function publishSyncEvent(
   type: string,
   data: any
 ): Promise<boolean> {
-  try {
-    const ch = await connectRabbitMQ();
-    const message = { type, data };
-    const content = Buffer.from(JSON.stringify(message));
-    return ch.sendToQueue(SYNC_QUEUE, content, { persistent: true });
-  } catch (error) {
-    console.error(`Failed to publish sync event:`, error);
-    return false;
+  const maxRetries = 3;
+  let lastError: any;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const ch = await connectRabbitMQ();
+      const message = { type, data };
+      const content = Buffer.from(JSON.stringify(message));
+
+      ch.publish(SYNC_EXCHANGE, "", content, { persistent: true });
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      return true;
+    } catch (error) {
+      lastError = error;
+      channel = null;
+      connection = null;
+      await new Promise((resolve) => setTimeout(resolve, 50 * attempt));
+    }
   }
+
+  console.error(`Failed to publish sync event ${type}:`, lastError);
+  return false;
 }
 
 export async function consumeSyncEvents(
@@ -65,11 +85,10 @@ export async function consumeSyncEvents(
 ) {
   try {
     const ch = await connectRabbitMQ();
-
     await ch.prefetch(1);
 
     ch.consume(
-      SYNC_QUEUE,
+      DEVICE_SERVICE_QUEUE,
       async (msg) => {
         if (!msg) return;
 
@@ -84,8 +103,6 @@ export async function consumeSyncEvents(
       },
       { noAck: false }
     );
-
-    console.log("✓ Sync consumer started");
   } catch (error) {
     console.error("Failed to start sync consumer:", error);
   }
@@ -95,7 +112,6 @@ export async function closeRabbitMQ() {
   try {
     if (channel) await channel.close();
     if (connection) await (connection as any).close();
-    console.log("RabbitMQ connection closed");
   } catch (error) {
     console.error("Error closing RabbitMQ connection:", error);
   }

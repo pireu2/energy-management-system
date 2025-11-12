@@ -22,12 +22,9 @@ app.get("/health", (req, res) => {
 const startServer = async () => {
   try {
     await AppDataSource.initialize();
-    console.log("Auth service database initialized successfully");
 
     app.listen(PORT, () => {
       console.log(`Auth service running on port ${PORT}`);
-      console.log(`Health check: http://localhost:${PORT}/health`);
-      console.log(`Auth API: http://localhost:${PORT}/auth`);
     });
   } catch (error) {
     console.error("Failed to start auth service:", error);

@@ -3,8 +3,6 @@ import { UserRepository } from "../models/UserRepository";
 import { publishSyncEvent } from "../config/rabbitmq";
 
 const userRepository = new UserRepository();
-const DEVICE_SERVICE_URL =
-  process.env.DEVICE_SERVICE_URL || "http://localhost:3003";
 
 export class UserController {
   async getAllUsers(req: Request, res: Response) {
@@ -93,21 +91,6 @@ export class UserController {
         email: user.email,
       });
 
-      try {
-        const resp = await fetch(`${DEVICE_SERVICE_URL}/devices/sync/user`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: user.id, email: user.email }),
-        });
-        if (!resp.ok) {
-          console.warn(
-            `Failed to mirror user to device-service: HTTP ${resp.status}`
-          );
-        }
-      } catch (mirrorErr) {
-        console.warn("Failed to mirror user to device-service:", mirrorErr);
-      }
-
       res.status(201).json(user);
     } catch (error) {
       console.error("Error creating user:", error);
@@ -145,14 +128,6 @@ export class UserController {
         email: user.email,
       });
 
-      try {
-        await fetch(`${DEVICE_SERVICE_URL}/devices/sync/user`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: user.id, email: user.email }),
-        });
-      } catch (_) {}
-
       res.json(user);
     } catch (error) {
       console.error("Error updating user:", error);
@@ -175,23 +150,6 @@ export class UserController {
       }
 
       await publishSyncEvent("user_deleted", { id });
-
-      try {
-        const resp = await fetch(
-          `${DEVICE_SERVICE_URL}/devices/sync/user/${id}`,
-          { method: "DELETE" }
-        );
-        if (!resp.ok) {
-          console.warn(
-            `Failed to delete mirrored user in device-service: HTTP ${resp.status}`
-          );
-        }
-      } catch (mirrorErr) {
-        console.warn(
-          "Failed to delete mirrored user in device-service:",
-          mirrorErr
-        );
-      }
 
       res.status(204).send();
     } catch (error) {

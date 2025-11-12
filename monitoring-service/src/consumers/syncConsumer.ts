@@ -18,8 +18,6 @@ interface SyncMessage {
 }
 
 export async function startSyncConsumer(channel: Channel) {
-  console.log("Starting synchronization consumer...");
-
   await channel.prefetch(1);
 
   channel.consume(
@@ -29,29 +27,34 @@ export async function startSyncConsumer(channel: Channel) {
 
       try {
         const syncMsg: SyncMessage = JSON.parse(msg.content.toString());
-        console.log(`Received sync message:`, syncMsg);
 
-        switch (syncMsg.type) {
-          case "user_created":
-          case "user_updated":
-            await handleUserSync(syncMsg.data);
-            break;
+        if (
+          syncMsg.type === "device_created" ||
+          syncMsg.type === "device_updated" ||
+          syncMsg.type === "device_deleted" ||
+          syncMsg.type === "user_created" ||
+          syncMsg.type === "user_updated" ||
+          syncMsg.type === "user_deleted"
+        ) {
+          switch (syncMsg.type) {
+            case "user_created":
+            case "user_updated":
+              await handleUserSync(syncMsg.data);
+              break;
 
-          case "user_deleted":
-            await handleUserDelete(syncMsg.data.id);
-            break;
+            case "user_deleted":
+              await handleUserDelete(syncMsg.data.id);
+              break;
 
-          case "device_created":
-          case "device_updated":
-            await handleDeviceSync(syncMsg.data);
-            break;
+            case "device_created":
+            case "device_updated":
+              await handleDeviceSync(syncMsg.data);
+              break;
 
-          case "device_deleted":
-            await handleDeviceDelete(syncMsg.data.id);
-            break;
-
-          default:
-            console.warn(`Unknown sync type: ${syncMsg.type}`);
+            case "device_deleted":
+              await handleDeviceDelete(syncMsg.data.id);
+              break;
+          }
         }
 
         channel.ack(msg);
@@ -62,8 +65,6 @@ export async function startSyncConsumer(channel: Channel) {
     },
     { noAck: false }
   );
-
-  console.log("✓ Synchronization consumer started");
 }
 
 async function handleUserSync(userData: any) {
@@ -77,8 +78,6 @@ async function handleUserSync(userData: any) {
       id: userData.id,
       email: userData.email,
     });
-
-    console.log(`Synced user: ${userData.id}`);
   } catch (error) {
     console.error("Error syncing user:", error);
     throw error;
@@ -88,7 +87,6 @@ async function handleUserSync(userData: any) {
 async function handleUserDelete(userId: number) {
   try {
     await userRepository.delete(userId);
-    console.log(`Deleted user: ${userId}`);
   } catch (error) {
     console.error("Error deleting user:", error);
     throw error;
@@ -106,10 +104,11 @@ async function handleDeviceSync(deviceData: any) {
       id: deviceData.id,
       name: deviceData.name,
       maximum_consumption: deviceData.maximumConsumption,
-      assigned_user_id: deviceData.assignedUserId,
+      assigned_user_id:
+        deviceData.assignedUserId !== undefined
+          ? deviceData.assignedUserId
+          : null,
     });
-
-    console.log(`Synced device: ${deviceData.id}`);
   } catch (error) {
     console.error("Error syncing device:", error);
     throw error;
@@ -119,7 +118,6 @@ async function handleDeviceSync(deviceData: any) {
 async function handleDeviceDelete(deviceId: number) {
   try {
     await deviceRepository.delete(deviceId);
-    console.log(`Deleted device: ${deviceId}`);
   } catch (error) {
     console.error("Error deleting device:", error);
     throw error;

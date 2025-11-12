@@ -2,7 +2,11 @@ import amqp from "amqplib";
 
 export const QUEUES = {
   DEVICE_DATA: "device_data_queue",
-  SYNC: "sync_queue",
+  SYNC: "sync_queue_monitoring_service",
+};
+
+export const EXCHANGES = {
+  SYNC: "sync_exchange",
 };
 
 const RABBITMQ_URL =
@@ -18,7 +22,6 @@ export async function connectRabbitMQ(): Promise<amqp.Channel> {
       return channel;
     }
 
-    console.log("Connecting to RabbitMQ...");
     connection = (await amqp.connect(RABBITMQ_URL)) as any;
     channel = await (connection as any).createChannel();
 
@@ -27,9 +30,9 @@ export async function connectRabbitMQ(): Promise<amqp.Channel> {
     }
 
     await channel.assertQueue(QUEUES.DEVICE_DATA, { durable: true });
+    await channel.assertExchange(EXCHANGES.SYNC, "fanout", { durable: true });
     await channel.assertQueue(QUEUES.SYNC, { durable: true });
-
-    console.log("✓ RabbitMQ connected successfully");
+    await channel.bindQueue(QUEUES.SYNC, EXCHANGES.SYNC, "");
 
     (connection as any).on("error", (err: Error) => {
       console.error("RabbitMQ connection error:", err);
@@ -38,7 +41,6 @@ export async function connectRabbitMQ(): Promise<amqp.Channel> {
     });
 
     (connection as any).on("close", () => {
-      console.log("RabbitMQ connection closed");
       channel = null;
       connection = null;
     });
@@ -68,7 +70,6 @@ export async function closeRabbitMQ() {
   try {
     if (channel) await channel.close();
     if (connection) await (connection as any).close();
-    console.log("RabbitMQ connection closed");
   } catch (error) {
     console.error("Error closing RabbitMQ connection:", error);
   }

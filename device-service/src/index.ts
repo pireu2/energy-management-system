@@ -25,27 +25,28 @@ app.get("/health", (req: Request, res: Response) => {
 const startServer = async () => {
   try {
     await AppDataSource.initialize();
-    console.log("Device service database initialized successfully");
 
-    // Start RabbitMQ sync consumer
     consumeSyncEvents(async (type, data) => {
-      try {
-        if (type === "user_created" || type === "user_updated") {
-          await mirroredUserRepository.syncFromUserService(data);
-          console.log(`Synced user ${data.id} via RabbitMQ`);
-        } else if (type === "user_deleted") {
-          await mirroredUserRepository.delete(data.id);
-          console.log(`Deleted user ${data.id} via RabbitMQ`);
+      if (
+        type === "user_created" ||
+        type === "user_updated" ||
+        type === "user_deleted"
+      ) {
+        try {
+          if (type === "user_created" || type === "user_updated") {
+            await mirroredUserRepository.syncFromUserService(data);
+          } else if (type === "user_deleted") {
+            await mirroredUserRepository.delete(data.id);
+          }
+        } catch (error) {
+          console.error(`Error handling sync event ${type}:`, error);
+          throw error;
         }
-      } catch (error) {
-        console.error(`Error handling sync event ${type}:`, error);
       }
     });
 
     app.listen(PORT, () => {
       console.log(`Device service running on port ${PORT}`);
-      console.log(`Health check: http://localhost:${PORT}/health`);
-      console.log(`Devices API: http://localhost:${PORT}/devices`);
     });
   } catch (error) {
     console.error("Failed to start device service:", error);

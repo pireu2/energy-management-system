@@ -27,20 +27,17 @@ app.get("/", (req, res) => {
 
 async function startServer() {
   try {
-    // Test database connection
     const dbConnected = await testConnection();
     if (!dbConnected) {
       throw new Error("Database connection failed");
     }
 
-    // Connect to RabbitMQ and start consumers
     const channel = await connectRabbitMQ();
     await startDeviceDataConsumer(channel);
     await startSyncConsumer(channel);
 
-    // Start Express server
     app.listen(PORT, () => {
-      console.log(`✓ Monitoring service running on port ${PORT}`);
+      console.log(`Monitoring service running on port ${PORT}`);
     });
   } catch (error) {
     console.error("Failed to start server:", error);
@@ -48,14 +45,11 @@ async function startServer() {
   }
 }
 
-// Handle graceful shutdown
 process.on("SIGTERM", async () => {
-  console.log("SIGTERM signal received: closing server");
   process.exit(0);
 });
 
 process.on("SIGINT", async () => {
-  console.log("SIGINT signal received: closing server");
   process.exit(0);
 });
 

@@ -21,21 +21,21 @@ export class MirroredDeviceRepository {
     id: number;
     name: string;
     maximum_consumption: number;
-    assigned_user_id?: number;
+    assigned_user_id?: number | null;
   }): Promise<MirroredDevice> {
     const result = await pool.query(
       `INSERT INTO mirrored_devices (id, name, maximum_consumption, assigned_user_id) 
        VALUES ($1, $2, $3, $4) 
        ON CONFLICT (id) DO UPDATE SET 
-         name = $2, 
-         maximum_consumption = $3, 
-         assigned_user_id = $4
+         name = EXCLUDED.name, 
+         maximum_consumption = EXCLUDED.maximum_consumption, 
+         assigned_user_id = EXCLUDED.assigned_user_id
        RETURNING *`,
       [
         device.id,
         device.name,
         device.maximum_consumption,
-        device.assigned_user_id || null,
+        device.assigned_user_id !== undefined ? device.assigned_user_id : null,
       ]
     );
     return result.rows[0];

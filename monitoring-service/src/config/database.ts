@@ -16,11 +16,10 @@ pool.on("error", (err) => {
 export async function testConnection() {
   try {
     const client = await pool.connect();
-    console.log("✓ Database connected successfully");
     client.release();
     return true;
   } catch (error) {
-    console.error("✗ Database connection failed:", error);
+    console.error("Database connection failed:", error);
     return false;
   }
 }

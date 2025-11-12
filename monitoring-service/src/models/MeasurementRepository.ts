@@ -72,6 +72,9 @@ export class MeasurementRepository {
 
     const result = await pool.query(
       `SELECT 
+        MIN(hec.id) as id,
+        MIN(hec.device_id) as device_id,
+        md.assigned_user_id as user_id,
         hec.hour_start,
         hec.hour_end,
         SUM(hec.total_consumption) as total_consumption,
@@ -81,7 +84,7 @@ export class MeasurementRepository {
        WHERE md.assigned_user_id = $1 
        AND hec.hour_start >= $2 
        AND hec.hour_start <= $3
-       GROUP BY hec.hour_start, hec.hour_end
+       GROUP BY md.assigned_user_id, hec.hour_start, hec.hour_end
        ORDER BY hec.hour_start`,
       [userId, startOfDay, endOfDay]
     );

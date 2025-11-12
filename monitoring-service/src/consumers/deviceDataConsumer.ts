@@ -13,8 +13,6 @@ interface DeviceDataMessage {
 }
 
 export async function startDeviceDataConsumer(channel: Channel) {
-  console.log("Starting device data consumer...");
-
   await channel.prefetch(1);
 
   channel.consume(
@@ -24,7 +22,6 @@ export async function startDeviceDataConsumer(channel: Channel) {
 
       try {
         const data: DeviceDataMessage = JSON.parse(msg.content.toString());
-        console.log(`Received device data:`, data);
 
         if (
           !data.device_id ||
@@ -58,17 +55,17 @@ export async function startDeviceDataConsumer(channel: Channel) {
         const hourEnd = new Date(hourStart);
         hourEnd.setHours(hourEnd.getHours() + 1);
 
+        const intervalHours = 10 / 3600;
+        const energyConsumption = data.measurement_value * intervalHours;
+
         await measurementRepository.upsertHourlyConsumption({
           device_id: data.device_id,
           hour_start: hourStart,
           hour_end: hourEnd,
-          total_consumption: data.measurement_value,
+          total_consumption: energyConsumption,
           measurement_count: 1,
         });
 
-        console.log(
-          `Processed measurement for device ${data.device_id} at ${timestamp}`
-        );
         channel.ack(msg);
       } catch (error) {
         console.error("Error processing device data:", error);
@@ -77,6 +74,4 @@ export async function startDeviceDataConsumer(channel: Channel) {
     },
     { noAck: false }
   );
-
-  console.log("✓ Device data consumer started");
 }
