@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { UserRepository } from "../models/UserRepository";
+import { publishSyncEvent } from "../config/rabbitmq";
 
 const userRepository = new UserRepository();
 const DEVICE_SERVICE_URL =
@@ -87,6 +88,11 @@ export class UserController {
         role,
       });
 
+      await publishSyncEvent("user_created", {
+        id: user.id,
+        email: user.email,
+      });
+
       try {
         const resp = await fetch(`${DEVICE_SERVICE_URL}/devices/sync/user`, {
           method: "POST",
@@ -134,6 +140,11 @@ export class UserController {
         return res.status(404).json({ error: "User not found" });
       }
 
+      await publishSyncEvent("user_updated", {
+        id: user.id,
+        email: user.email,
+      });
+
       try {
         await fetch(`${DEVICE_SERVICE_URL}/devices/sync/user`, {
           method: "POST",
@@ -162,6 +173,8 @@ export class UserController {
       if (!deleted) {
         return res.status(404).json({ error: "User not found" });
       }
+
+      await publishSyncEvent("user_deleted", { id });
 
       try {
         const resp = await fetch(

@@ -12,6 +12,7 @@ import { SignupPage } from "./pages/SignupPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { DevicesPage } from "./pages/DevicesPage";
 import { UsersPage } from "./pages/UsersPage";
+import { EnergyMonitoringPage } from "./pages/EnergyMonitoringPage";
 import "./App.css";
 
 function App() {
@@ -34,6 +35,10 @@ function App() {
                     <Route path="/dashboard" element={<DashboardPage />} />
                     <Route path="/devices" element={<DevicesPage />} />
                     <Route path="/users" element={<UsersPage />} />
+                    <Route
+                      path="/monitoring"
+                      element={<EnergyMonitoringPage />}
+                    />
                   </Routes>
                 </Layout>
               </ProtectedRoute>

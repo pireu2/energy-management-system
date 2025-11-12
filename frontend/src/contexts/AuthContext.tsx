@@ -7,6 +7,7 @@ import React, {
 } from "react";
 
 interface User {
+  id?: number;
   email: string;
   role: "admin" | "client";
 }
@@ -62,7 +63,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (response.ok) {
         const data = await response.json();
-        setUser({ email: data.user.email, role: data.user.role });
+        setUser({
+          id: data.user.id,
+          email: data.user.email,
+          role: data.user.role,
+        });
       } else {
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
@@ -94,7 +99,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const data = await response.json();
       localStorage.setItem("accessToken", data.accessToken);
       localStorage.setItem("refreshToken", data.refreshToken);
-      setUser({ email: data.user.email, role: data.user.role });
+      setUser({
+        id: data.user.id,
+        email: data.user.email,
+        role: data.user.role,
+      });
     } catch (error) {
       throw error;
     }
@@ -124,7 +133,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const data = await response.json();
       localStorage.setItem("accessToken", data.accessToken);
       localStorage.setItem("refreshToken", data.refreshToken);
-      setUser({ email: data.user.email, role: data.user.role });
+      setUser({
+        id: data.user.id,
+        email: data.user.email,
+        role: data.user.role,
+      });
     } catch (error) {
       throw error;
     }

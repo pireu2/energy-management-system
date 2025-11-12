@@ -1,4 +1,22 @@
 services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: energy-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: energy_user
+      RABBITMQ_DEFAULT_PASS: energy_password
+    ports:
+      - "5672:5672"   # AMQP port
+      - "15672:15672" # Management UI
+    networks:
+      - energy-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   postgres-auth:
     image: postgres:15
     container_name: energy-postgres-auth
@@ -47,6 +65,22 @@ services:
       - energy-network
     restart: unless-stopped
 
+  postgres-monitoring:
+    image: postgres:15
+    container_name: energy-postgres-monitoring
+    environment:
+      POSTGRES_USER: energy_user
+      POSTGRES_PASSWORD: energy_password
+      POSTGRES_DB: monitoring_db
+    ports:
+      - "5437:5432"
+    volumes:
+      - postgres_monitoring_data:/var/lib/postgresql/data
+      - ./database/init-monitoring.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - energy-network
+    restart: unless-stopped
+
   user-service:
     build: ./user-service
     container_name: energy-user-service
@@ -59,10 +93,14 @@ services:
       PORT: 3001
       NODE_ENV: development
       DEVICE_SERVICE_URL: http://device-service:3003
+      RABBITMQ_URL: amqp://energy_user:energy_password@rabbitmq:5672
     ports:
       - "3001:3001"
     depends_on:
-      - postgres-user
+      rabbitmq:
+        condition: service_healthy
+      postgres-user:
+        condition: service_started
     networks:
       - energy-network
     extra_hosts:
@@ -109,10 +147,14 @@ services:
       DB_PASSWORD: energy_password
       PORT: 3003
       NODE_ENV: development
+      RABBITMQ_URL: amqp://energy_user:energy_password@rabbitmq:5672
     ports:
       - "3003:3003"
     depends_on:
-      - postgres-device
+      rabbitmq:
+        condition: service_healthy
+      postgres-device:
+        condition: service_started
     networks:
       - energy-network
     extra_hosts:
@@ -155,8 +197,34 @@ services:
       - user-service
       - device-service
       - swagger-service
+      - monitoring-service
     networks:
       - energy-network
+    restart: unless-stopped
+
+  monitoring-service:
+    build: ./monitoring-service
+    container_name: energy-monitoring-service
+    environment:
+      DB_HOST: host.docker.internal
+      DB_PORT: 5437
+      DB_NAME: monitoring_db
+      DB_USER: energy_user
+      DB_PASSWORD: energy_password
+      PORT: 3005
+      NODE_ENV: development
+      RABBITMQ_URL: amqp://energy_user:energy_password@rabbitmq:5672
+    ports:
+      - "3005:3005"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres-monitoring:
+        condition: service_started
+    networks:
+      - energy-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     restart: unless-stopped
 
 networks:
@@ -167,3 +235,4 @@ volumes:
   postgres_auth_data:
   postgres_user_data:
   postgres_device_data:
+  postgres_monitoring_data:

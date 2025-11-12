@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { DeviceRepository } from "../models/DeviceRepository";
 import { MirroredUserRepository } from "../models/MirroredUserRepository";
+import { publishSyncEvent } from "../config/rabbitmq";
 
 const deviceRepository = new DeviceRepository();
 const mirroredUserRepository = new MirroredUserRepository();
@@ -101,6 +102,13 @@ export class DeviceController {
         assignedUserId,
       });
 
+      await publishSyncEvent("device_created", {
+        id: device.id,
+        name: device.name,
+        maximumConsumption: device.maximumConsumption,
+        assignedUserId: device.assignedUserId,
+      });
+
       res.status(201).json(device);
     } catch (error) {
       console.error("Error creating device:", error);
@@ -156,6 +164,13 @@ export class DeviceController {
         return res.status(404).json({ error: "Device not found" });
       }
 
+      await publishSyncEvent("device_updated", {
+        id: device.id,
+        name: device.name,
+        maximumConsumption: device.maximumConsumption,
+        assignedUserId: device.assignedUserId,
+      });
+
       res.json(device);
     } catch (error) {
       console.error("Error updating device:", error);
@@ -174,6 +189,8 @@ export class DeviceController {
       if (!deleted) {
         return res.status(404).json({ error: "Device not found" });
       }
+
+      await publishSyncEvent("device_deleted", { id });
 
       res.status(204).send();
     } catch (error) {
@@ -203,6 +220,13 @@ export class DeviceController {
         return res.status(404).json({ error: "Device not found" });
       }
 
+      await publishSyncEvent("device_updated", {
+        id: device.id,
+        name: device.name,
+        maximumConsumption: device.maximumConsumption,
+        assignedUserId: device.assignedUserId,
+      });
+
       res.json(device);
     } catch (error) {
       console.error("Error assigning device to user:", error);
@@ -221,6 +245,13 @@ export class DeviceController {
       if (!device) {
         return res.status(404).json({ error: "Device not found" });
       }
+
+      await publishSyncEvent("device_updated", {
+        id: device.id,
+        name: device.name,
+        maximumConsumption: device.maximumConsumption,
+        assignedUserId: device.assignedUserId,
+      });
 
       res.json(device);
     } catch (error) {

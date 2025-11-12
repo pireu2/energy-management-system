@@ -9,6 +9,7 @@ import {
   MdLogout,
   MdElectricBolt,
   MdAccountCircle,
+  MdShowChart,
 } from "react-icons/md";
 
 interface LayoutProps {
@@ -27,6 +28,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navItems = [
     { path: "/dashboard", label: "Dashboard", icon: MdDashboard },
     { path: "/devices", label: "Devices", icon: MdDevices },
+    { path: "/monitoring", label: "Energy Monitoring", icon: MdShowChart },
     ...(user?.role === "admin"
       ? [{ path: "/users", label: "Users", icon: MdPeople }]
       : []),
@@ -42,9 +44,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <div className="p-2 bg-blue-600 rounded-lg">
                   <MdElectricBolt className="text-white text-xl" />
                 </div>
-                <h2 className="text-3xl font-bold text-gray-900">
+                <h3 className="text-xl font-bold text-gray-900">
                   Energy Management
-                </h2>
+                </h3>
               </div>
               <nav className="hidden md:flex space-x-1">
                 {navItems.map((item) => (

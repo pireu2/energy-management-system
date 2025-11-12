@@ -1,0 +1,20 @@
+{
+  "name": "device-simulator",
+  "version": "1.0.0",
+  "description": "Smart meter device data simulator",
+  "main": "dist/simulator.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/simulator.js",
+    "dev": "ts-node src/simulator.ts"
+  },
+  "dependencies": {
+    "amqplib": "^0.10.3"
+  },
+  "devDependencies": {
+    "@types/amqplib": "^0.10.4",
+    "@types/node": "^20.10.5",
+    "typescript": "^5.3.3",
+    "ts-node": "^10.9.2"
+  }
+}
