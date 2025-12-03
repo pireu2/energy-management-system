@@ -1,5 +1,8 @@
 FROM node:18-alpine
 
+# Install Docker CLI for container scaling
+RUN apk add --no-cache docker-cli
+
 WORKDIR /app
 
 COPY package*.json ./

@@ -286,6 +286,24 @@ export const ChatWidget: React.FC = () => {
     };
   }, [connectWebSocket]);
 
+  const fetchSessionMessages = async (
+    sessionId: number
+  ): Promise<ChatMessage[]> => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const response = await fetch(`/api/chat/sessions/${sessionId}/messages`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        return data;
+      }
+    } catch (error) {
+      console.error("Failed to load messages:", error);
+    }
+    return [];
+  };
+
   const startSession = async (
     mode: "bot" | "admin" = "bot",
     adminId: number | null = null
@@ -307,8 +325,15 @@ export const ChatWidget: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         setSession(data.session);
-        setMessages([]);
         setChatMode(mode);
+
+        // If existing session, load its messages
+        if (data.isExisting && data.session?.id) {
+          const existingMessages = await fetchSessionMessages(data.session.id);
+          setMessages(existingMessages);
+        } else {
+          setMessages([]);
+        }
         return data.session;
       }
     } catch (error) {

@@ -1,10 +1,10 @@
 import amqp from "amqplib";
 
-const REPLICA_ID = parseInt(process.env.REPLICA_ID || "1");
+const DEVICE_ID = parseInt(process.env.DEVICE_ID || "0");
 
 export const QUEUES = {
   DEVICE_DATA: "device_data_queue",
-  INGEST: `ingest_queue_${REPLICA_ID}`,
+  INGEST: DEVICE_ID > 0 ? `ingest_queue_${DEVICE_ID}` : "device_data_queue",
   SYNC: "sync_queue_monitoring_service",
   NOTIFICATIONS: "notifications_queue",
 };
@@ -20,8 +20,8 @@ const RABBITMQ_URL =
 let connection: amqp.Connection | null = null;
 let channel: amqp.Channel | null = null;
 
-export function getReplicaId(): number {
-  return REPLICA_ID;
+export function getDeviceId(): number {
+  return DEVICE_ID;
 }
 
 export async function connectRabbitMQ(): Promise<amqp.Channel> {

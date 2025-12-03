@@ -51,6 +51,41 @@ app.post(
       const user = req.user!;
       const { targetAdminId, chatMode } = req.body;
 
+      // Check for existing active session with the same parameters
+      let existingSession = null;
+      if (chatMode === "bot") {
+        // Look for existing bot session for this user
+        const result = await pool.query(
+          `SELECT * FROM chat_sessions 
+           WHERE user_id = $1 AND session_type = 'bot' AND status != 'closed'
+           ORDER BY updated_at DESC LIMIT 1`,
+          [user.userId]
+        );
+        if (result.rows.length > 0) {
+          existingSession = result.rows[0];
+        }
+      } else if (chatMode === "admin" && targetAdminId) {
+        // Look for existing admin session with this specific admin
+        const result = await pool.query(
+          `SELECT * FROM chat_sessions 
+           WHERE user_id = $1 AND admin_id = $2 AND session_type = 'admin' AND status != 'closed'
+           ORDER BY updated_at DESC LIMIT 1`,
+          [user.userId, targetAdminId]
+        );
+        if (result.rows.length > 0) {
+          existingSession = result.rows[0];
+        }
+      }
+
+      // Return existing session if found
+      if (existingSession) {
+        return res.json({
+          session: existingSession,
+          isExisting: true,
+        });
+      }
+
+      // Create new session
       const sessionResult = await pool.query(
         "INSERT INTO chat_sessions (user_id, user_email, status, admin_id, session_type) VALUES ($1, $2, $3, $4, $5) RETURNING *",
         [
@@ -64,6 +99,7 @@ app.post(
 
       res.json({
         session: sessionResult.rows[0],
+        isExisting: false,
       });
     } catch (error) {
       console.error("Create session error:", error);
@@ -111,13 +147,17 @@ app.post(
       ) {
         if (sessionData.admin_id) {
           await publishToQueue(QUEUES.NOTIFICATIONS, {
-            type: "admin_chat",
+            type: "chat",
             userId: sessionData.admin_id,
             fromUserId: user.userId,
             fromUserEmail: user.email,
             message,
             toUser: sessionData.admin_id,
-            data: { sessionId },
+            data: {
+              sessionId: parseInt(sessionId),
+              type: "user_message",
+              fromUserEmail: user.email,
+            },
           });
         }
 
@@ -159,14 +199,7 @@ app.post(
         [sessionId]
       );
 
-      await publishToQueue(QUEUES.NOTIFICATIONS, {
-        type: "chat",
-        userId: user.userId,
-        userEmail: user.email,
-        message: responseText,
-        toUser: user.userId,
-        data: { sessionId, responseType },
-      });
+      // No need to send notification for bot responses - user gets response via HTTP
 
       res.json({
         response: botMessageResult.rows[0],
@@ -325,14 +358,7 @@ app.post(
         [currentSessionId, user.userId, "bot", response, responseType]
       );
 
-      await publishToQueue(QUEUES.NOTIFICATIONS, {
-        type: "chat",
-        userId: user.userId,
-        userEmail: user.email,
-        message: response,
-        toUser: user.userId,
-        data: { sessionId: currentSessionId, responseType },
-      });
+      // No need to send notification - user gets response via HTTP
 
       res.json({
         sessionId: currentSessionId,

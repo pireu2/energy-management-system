@@ -214,14 +214,16 @@ services:
       PORT: 3005
       NODE_ENV: development
       RABBITMQ_URL: amqp://energy_user:energy_password@rabbitmq:5672
-      USE_LOAD_BALANCER: "false"
-      REPLICA_ID: "1"
+      DEVICE_SERVICE_URL: http://device-service:3003/devices
+      DEVICE_ID: "0"
     ports:
       - "3005:3005"
     depends_on:
       rabbitmq:
         condition: service_healthy
       postgres-monitoring:
+        condition: service_started
+      device-service:
         condition: service_started
     networks:
       - energy-network
@@ -257,7 +259,7 @@ services:
       PORT: 3007
       JWT_SECRET: dG8ksW9pQ2vRxN4mF7jP1zL3bH6sA8cE5qY9wT0uI2rO4vX7nK3gD6fS1mP8hL5c
       RABBITMQ_URL: amqp://energy_user:energy_password@rabbitmq:5672
-      HUGGINGFACE_API_KEY: <YOUR_HUGGINGFACE_API_KEY>
+      HUGGINGFACE_API_KEY: =<YOUR_HUGGINGFACE_API_KEY>=
     ports:
       - "3007:3007"
     depends_on:
@@ -277,13 +279,40 @@ services:
     environment:
       PORT: 3008
       RABBITMQ_URL: amqp://energy_user:energy_password@rabbitmq:5672
-      REPLICA_COUNT: "3"
-      LB_STRATEGY: "round-robin"
+      DEVICE_SERVICE_URL: http://device-service:3003/devices
+      ENABLE_CONTAINER_SCALING: "true"
+      DOCKER_NETWORK: assignment1_energy-network
+      MONITORING_IMAGE: assignment1-monitoring-service
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - "3008:3008"
     depends_on:
       rabbitmq:
         condition: service_healthy
+      device-service:
+        condition: service_started
+      monitoring-service:
+        condition: service_started
+    networks:
+      - energy-network
+    restart: unless-stopped
+
+  device-simulator:
+    build: ./load-balancer-service
+    container_name: energy-device-simulator
+    command: ["npm", "run", "simulator"]
+    environment:
+      RABBITMQ_URL: amqp://energy_user:energy_password@rabbitmq:5672
+      DEVICE_SERVICE_URL: http://device-service:3003/devices
+      INTERVAL_MS: "10000"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      device-service:
+        condition: service_started
+      monitoring-service:
+        condition: service_started
     networks:
       - energy-network
     restart: unless-stopped
