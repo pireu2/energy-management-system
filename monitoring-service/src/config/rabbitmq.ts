@@ -1,8 +1,12 @@
 import amqp from "amqplib";
 
+const REPLICA_ID = parseInt(process.env.REPLICA_ID || "1");
+
 export const QUEUES = {
   DEVICE_DATA: "device_data_queue",
+  INGEST: `ingest_queue_${REPLICA_ID}`,
   SYNC: "sync_queue_monitoring_service",
+  NOTIFICATIONS: "notifications_queue",
 };
 
 export const EXCHANGES = {
@@ -15,6 +19,10 @@ const RABBITMQ_URL =
 
 let connection: amqp.Connection | null = null;
 let channel: amqp.Channel | null = null;
+
+export function getReplicaId(): number {
+  return REPLICA_ID;
+}
 
 export async function connectRabbitMQ(): Promise<amqp.Channel> {
   try {
@@ -30,6 +38,8 @@ export async function connectRabbitMQ(): Promise<amqp.Channel> {
     }
 
     await channel.assertQueue(QUEUES.DEVICE_DATA, { durable: true });
+    await channel.assertQueue(QUEUES.INGEST, { durable: true });
+    await channel.assertQueue(QUEUES.NOTIFICATIONS, { durable: true });
     await channel.assertExchange(EXCHANGES.SYNC, "fanout", { durable: true });
     await channel.assertQueue(QUEUES.SYNC, { durable: true });
     await channel.bindQueue(QUEUES.SYNC, EXCHANGES.SYNC, "");
@@ -64,6 +74,19 @@ export async function publishToQueue(
     console.error(`Failed to publish to queue ${queue}:`, error);
     return false;
   }
+}
+
+export async function publishNotification(notification: {
+  type: string;
+  userId: number;
+  deviceId: number;
+  message: string;
+  data?: any;
+}): Promise<boolean> {
+  return publishToQueue(QUEUES.NOTIFICATIONS, {
+    ...notification,
+    timestamp: new Date().toISOString(),
+  });
 }
 
 export async function closeRabbitMQ() {

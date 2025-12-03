@@ -7,6 +7,7 @@ import {
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Layout } from "./components/Layout";
+import { ChatWidget } from "./components/ChatWidget";
 import { LoginPage } from "./pages/LoginPage";
 import { SignupPage } from "./pages/SignupPage";
 import { DashboardPage } from "./pages/DashboardPage";
@@ -41,6 +42,7 @@ function App() {
                     />
                   </Routes>
                 </Layout>
+                <ChatWidget />
               </ProtectedRoute>
             }
           />

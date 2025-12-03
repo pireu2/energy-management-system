@@ -1,5 +1,5 @@
 import { Channel } from "amqplib";
-import { QUEUES } from "../config/rabbitmq";
+import { QUEUES, publishNotification, getReplicaId } from "../config/rabbitmq";
 import { MeasurementRepository } from "../models/MeasurementRepository";
 import { MirroredDeviceRepository } from "../models/MirroredDeviceRepository";
 
@@ -15,8 +15,13 @@ interface DeviceDataMessage {
 export async function startDeviceDataConsumer(channel: Channel) {
   await channel.prefetch(1);
 
+  const useLoadBalancer = process.env.USE_LOAD_BALANCER === "true";
+  const queueToConsume = useLoadBalancer ? QUEUES.INGEST : QUEUES.DEVICE_DATA;
+
+  console.log(`Replica ${getReplicaId()} consuming from: ${queueToConsume}`);
+
   channel.consume(
-    QUEUES.DEVICE_DATA,
+    queueToConsume,
     async (msg) => {
       if (!msg) return;
 
@@ -65,6 +70,30 @@ export async function startDeviceDataConsumer(channel: Channel) {
           total_consumption: energyConsumption,
           measurement_count: 1,
         });
+
+        const hourlyTotal = await measurementRepository.getHourlyConsumption(
+          data.device_id,
+          hourStart
+        );
+
+        if (
+          hourlyTotal &&
+          device.maximum_consumption &&
+          hourlyTotal.total_consumption > device.maximum_consumption
+        ) {
+          await publishNotification({
+            type: "overconsumption",
+            userId: device.assigned_user_id || 0,
+            deviceId: data.device_id,
+            message: `Device "${device.name}" has exceeded its hourly consumption limit`,
+            data: {
+              deviceName: device.name,
+              currentConsumption: hourlyTotal.total_consumption.toFixed(2),
+              maxAllowed: device.maximum_consumption,
+              hourStart: hourStart.toISOString(),
+            },
+          });
+        }
 
         channel.ack(msg);
       } catch (error) {

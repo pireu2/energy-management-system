@@ -214,6 +214,8 @@ services:
       PORT: 3005
       NODE_ENV: development
       RABBITMQ_URL: amqp://energy_user:energy_password@rabbitmq:5672
+      USE_LOAD_BALANCER: "false"
+      REPLICA_ID: "1"
     ports:
       - "3005:3005"
     depends_on:
@@ -227,6 +229,81 @@ services:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
 
+  websocket-service:
+    build: ./websocket-service
+    container_name: energy-websocket-service
+    environment:
+      PORT: 3006
+      JWT_SECRET: dG8ksW9pQ2vRxN4mF7jP1zL3bH6sA8cE5qY9wT0uI2rO4vX7nK3gD6fS1mP8hL5c
+      RABBITMQ_URL: amqp://energy_user:energy_password@rabbitmq:5672
+    ports:
+      - "3006:3006"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - energy-network
+    restart: unless-stopped
+
+  chat-service:
+    build: ./chat-service
+    container_name: energy-chat-service
+    environment:
+      DB_HOST: host.docker.internal
+      DB_PORT: 5438
+      DB_NAME: chat_db
+      DB_USER: energy_user
+      DB_PASSWORD: energy_password
+      PORT: 3007
+      JWT_SECRET: dG8ksW9pQ2vRxN4mF7jP1zL3bH6sA8cE5qY9wT0uI2rO4vX7nK3gD6fS1mP8hL5c
+      RABBITMQ_URL: amqp://energy_user:energy_password@rabbitmq:5672
+      HUGGINGFACE_API_KEY: <YOUR_HUGGINGFACE_API_KEY>
+    ports:
+      - "3007:3007"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres-chat:
+        condition: service_started
+    networks:
+      - energy-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  load-balancer-service:
+    build: ./load-balancer-service
+    container_name: energy-load-balancer-service
+    environment:
+      PORT: 3008
+      RABBITMQ_URL: amqp://energy_user:energy_password@rabbitmq:5672
+      REPLICA_COUNT: "3"
+      LB_STRATEGY: "round-robin"
+    ports:
+      - "3008:3008"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - energy-network
+    restart: unless-stopped
+
+  postgres-chat:
+    image: postgres:15
+    container_name: energy-postgres-chat
+    environment:
+      POSTGRES_USER: energy_user
+      POSTGRES_PASSWORD: energy_password
+      POSTGRES_DB: chat_db
+    ports:
+      - "5438:5432"
+    volumes:
+      - postgres_chat_data:/var/lib/postgresql/data
+      - ./database/init-chat.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - energy-network
+    restart: unless-stopped
+
 networks:
   energy-network:
     driver: bridge
@@ -236,3 +313,4 @@ volumes:
   postgres_user_data:
   postgres_device_data:
   postgres_monitoring_data:
+  postgres_chat_data:
