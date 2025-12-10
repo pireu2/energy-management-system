@@ -32,10 +32,6 @@ services:
         value: energy_user
       - key: RABBITMQ_DEFAULT_PASS
         value: energy_password
-    disk:
-      name: rabbitmq-data
-      mountPath: /var/lib/rabbitmq
-      sizeGB: 1
 
   # User Service
   - type: web
