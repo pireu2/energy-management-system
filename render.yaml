@@ -272,6 +272,14 @@ services:
       - key: PORT
         value: 3004
 
+  # API Gateway
+  - type: web
+    name: api-gateway
+    plan: free
+    runtime: docker
+    dockerfilePath: ./api-gateaway/Dockerfile
+    dockerContext: ./api-gateaway
+
   # Frontend
   - type: web
     name: frontend
