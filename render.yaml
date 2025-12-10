@@ -50,7 +50,9 @@ services:
           name: user-db
           property: port
       - key: DB_NAME
-        value: user_management
+        fromDatabase:
+          name: user-db
+          property: database
       - key: DB_USER
         fromDatabase:
           name: user-db
@@ -88,7 +90,9 @@ services:
           name: auth-db
           property: port
       - key: DB_NAME
-        value: auth_db
+        fromDatabase:
+          name: auth-db
+          property: database
       - key: DB_USER
         fromDatabase:
           name: auth-db
@@ -131,7 +135,9 @@ services:
           name: device-db
           property: port
       - key: DB_NAME
-        value: device_management
+        fromDatabase:
+          name: device-db
+          property: database
       - key: DB_USER
         fromDatabase:
           name: device-db
@@ -164,7 +170,9 @@ services:
           name: monitoring-db
           property: port
       - key: DB_NAME
-        value: monitoring_db
+        fromDatabase:
+          name: monitoring-db
+          property: database
       - key: DB_USER
         fromDatabase:
           name: monitoring-db
@@ -216,7 +224,9 @@ services:
           name: chat-db
           property: port
       - key: DB_NAME
-        value: chat_db
+        fromDatabase:
+          name: chat-db
+          property: database
       - key: DB_USER
         fromDatabase:
           name: chat-db
