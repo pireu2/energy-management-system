@@ -39,6 +39,7 @@ services:
     plan: free
     runtime: docker
     dockerfilePath: ./user-service/Dockerfile
+    dockerContext: ./user-service
     envVars:
       - key: DB_HOST
         fromDatabase:
@@ -76,6 +77,7 @@ services:
     plan: free
     runtime: docker
     dockerfilePath: ./auth-service/Dockerfile
+    dockerContext: ./auth-service
     envVars:
       - key: DB_HOST
         fromDatabase:
@@ -118,6 +120,7 @@ services:
     plan: free
     runtime: docker
     dockerfilePath: ./device-service/Dockerfile
+    dockerContext: ./device-service
     envVars:
       - key: DB_HOST
         fromDatabase:
@@ -150,6 +153,7 @@ services:
     plan: free
     runtime: docker
     dockerfilePath: ./monitoring-service/Dockerfile
+    dockerContext: ./monitoring-service
     envVars:
       - key: DB_HOST
         fromDatabase:
@@ -186,6 +190,7 @@ services:
     plan: free
     runtime: docker
     dockerfilePath: ./websocket-service/Dockerfile
+    dockerContext: ./websocket-service
     envVars:
       - key: PORT
         value: 3006
@@ -200,6 +205,7 @@ services:
     plan: free
     runtime: docker
     dockerfilePath: ./chat-service/Dockerfile
+    dockerContext: ./chat-service
     envVars:
       - key: DB_HOST
         fromDatabase:
@@ -234,6 +240,7 @@ services:
     plan: free
     runtime: docker
     dockerfilePath: ./load-balancer-service/Dockerfile
+    dockerContext: ./load-balancer-service
     envVars:
       - key: PORT
         value: 3008
@@ -250,6 +257,7 @@ services:
     plan: free
     runtime: docker
     dockerfilePath: ./swagger-service/Dockerfile
+    dockerContext: ./swagger-service
     envVars:
       - key: PORT
         value: 3004
@@ -260,3 +268,4 @@ services:
     plan: free
     runtime: docker
     dockerfilePath: ./frontend/Dockerfile
+    dockerContext: ./frontend
