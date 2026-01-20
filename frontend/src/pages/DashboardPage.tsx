@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { config } from "../config/env";
 import {
   Card,
   CardContent,
@@ -44,7 +45,7 @@ export const DashboardPage: React.FC = () => {
     try {
       const token = localStorage.getItem("accessToken");
 
-      const devicesResponse = await fetch("/api/devices", {
+      const devicesResponse = await fetch(`${config.apiUrl}/api/devices`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -65,7 +66,7 @@ export const DashboardPage: React.FC = () => {
       }
 
       if (user?.role === "admin") {
-        const usersResponse = await fetch("/api/users", {
+        const usersResponse = await fetch(`${config.apiUrl}/api/users`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

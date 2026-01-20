@@ -16,7 +16,7 @@ export default defineConfig({
     port: 3000,
     proxy: {
       "/api": {
-        target: "http://api-gateway",
+        target: process.env.VITE_API_URL || "http://api-gateway",
         changeOrigin: true,
         secure: false,
         ws: true,

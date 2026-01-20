@@ -3,6 +3,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
+import { config } from "../config/env";
 
 interface ChatMessage {
   id: number;
@@ -119,7 +120,7 @@ export const ChatWidget: React.FC = () => {
     const fetchAdmins = async () => {
       try {
         const token = localStorage.getItem("accessToken");
-        const response = await fetch("/api/users", {
+        const response = await fetch(`${config.apiUrl}/api/users`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (response.ok) {
@@ -141,7 +142,7 @@ export const ChatWidget: React.FC = () => {
     if (user?.role !== "admin") return;
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await fetch("/api/chat/admin/requests", {
+      const response = await fetch(`${config.apiUrl}/api/chat/admin/requests`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.ok) {
@@ -165,12 +166,7 @@ export const ChatWidget: React.FC = () => {
     const token = localStorage.getItem("accessToken");
     if (!token) return;
 
-    const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsHost = window.location.hostname;
-    const wsPort = "3006";
-    const ws = new WebSocket(
-      `${wsProtocol}//${wsHost}:${wsPort}?token=${token}`
-    );
+    const ws = new WebSocket(`${config.wsUrl}?token=${token}`);
 
     ws.onopen = () => {
       setIsConnected(true);
@@ -291,9 +287,12 @@ export const ChatWidget: React.FC = () => {
   ): Promise<ChatMessage[]> => {
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await fetch(`/api/chat/sessions/${sessionId}/messages`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await fetch(
+        `${config.apiUrl}/api/chat/sessions/${sessionId}/messages`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       if (response.ok) {
         const data = await response.json();
         return data;
@@ -310,7 +309,7 @@ export const ChatWidget: React.FC = () => {
   ) => {
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await fetch("/api/chat/session", {
+      const response = await fetch(`${config.apiUrl}/api/chat/session`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -412,7 +411,7 @@ export const ChatWidget: React.FC = () => {
       }
 
       const response = await fetch(
-        `/api/chat/session/${currentSession.id}/message`,
+        `${config.apiUrl}/api/chat/session/${currentSession.id}/message`,
         {
           method: "POST",
           headers: {
@@ -459,7 +458,7 @@ export const ChatWidget: React.FC = () => {
     setInputMessage("");
 
     try {
-      const response = await fetch("/api/chat/admin/reply", {
+      const response = await fetch(`${config.apiUrl}/api/chat/admin/reply`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -482,9 +481,12 @@ export const ChatWidget: React.FC = () => {
   const loadSessionMessages = async (sessionId: number) => {
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await fetch(`/api/chat/sessions/${sessionId}/messages`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await fetch(
+        `${config.apiUrl}/api/chat/sessions/${sessionId}/messages`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       if (response.ok) {
         const data = await response.json();
         setAdminPanelMessages(data);

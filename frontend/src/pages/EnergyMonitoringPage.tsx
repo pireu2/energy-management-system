@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { config } from "../config/env";
 import {
   Card,
   CardContent,
@@ -68,7 +69,7 @@ export const EnergyMonitoringPage: React.FC = () => {
     try {
       const token = localStorage.getItem("accessToken");
       const response = await fetch(
-        `/api/monitoring/users/${user.id}/consumption?date=${selectedDate}`,
+        `${config.apiUrl}/api/monitoring/users/${user.id}/consumption?date=${selectedDate}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
