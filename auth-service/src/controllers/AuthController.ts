@@ -60,6 +60,7 @@ export class AuthController {
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
         user: {
+          id: user.id,
           email: user.email,
           role: user.role,
         },
@@ -109,6 +110,8 @@ export class AuthController {
         throw new Error(`User service error: ${userProfileResponse.status}`);
       }
 
+      const userProfile = await userProfileResponse.json();
+
       const credential = await authRepository.create(email, password);
 
       const tokens = JWTService.generateTokenPair({
@@ -123,6 +126,7 @@ export class AuthController {
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
         user: {
+          id: userProfile.id,
           email: email,
           role: role,
         },

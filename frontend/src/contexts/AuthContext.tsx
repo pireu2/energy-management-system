@@ -57,6 +57,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const validateToken = async (token: string) => {
     try {
       const response = await fetch(`${config.apiUrl}/api/auth/validate`, {
+        mode: "cors",
+        credentials: "omit",
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -86,6 +88,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const response = await fetch(`${config.apiUrl}/api/auth/login`, {
         method: "POST",
+        mode: "cors",
+        credentials: "omit",
         headers: {
           "Content-Type": "application/json",
         },
@@ -120,6 +124,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const response = await fetch(`${config.apiUrl}/api/auth/register`, {
         method: "POST",
+        mode: "cors",
+        credentials: "omit",
         headers: {
           "Content-Type": "application/json",
         },
@@ -150,6 +156,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (refreshToken) {
         await fetch(`${config.apiUrl}/api/auth/logout`, {
           method: "POST",
+          mode: "cors",
+          credentials: "omit",
           headers: {
             "Content-Type": "application/json",
           },
