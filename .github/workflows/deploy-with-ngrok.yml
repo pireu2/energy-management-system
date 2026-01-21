@@ -7,9 +7,6 @@ on:
 
 env:
   NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
-  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
 jobs:
   deploy-backend:
@@ -69,42 +66,3 @@ jobs:
             fi
             sleep 2
           done
-
-      - name: Update Vercel environment variables
-        if: env.VERCEL_TOKEN != ''
-        run: |
-          NGROK_URL="${{ steps.ngrok-url.outputs.url }}"
-
-          # Install Vercel CLI
-          npm i -g vercel
-
-          # Update environment variables
-          vercel env rm VITE_API_URL production --yes --token=${{ secrets.VERCEL_TOKEN }}
-          echo "$NGROK_URL" | vercel env add VITE_API_URL production --token=${{ secrets.VERCEL_TOKEN }}
-
-          vercel env rm VITE_WS_URL production --yes --token=${{ secrets.VERCEL_TOKEN }}
-          echo "${NGROK_URL/https/wss}/ws" | vercel env add VITE_WS_URL production --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Trigger Vercel deployment
-        if: env.VERCEL_TOKEN != ''
-        run: |
-          cd frontend
-          vercel --prod --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Display ngrok URL
-        run: |
-          echo "🚀 Backend is accessible at: ${{ steps.ngrok-url.outputs.url }}"
-          echo "📊 Ngrok dashboard: http://localhost:4040"
-
-      - name: Keep ngrok running
-        run: |
-          echo "Keeping ngrok tunnel active..."
-          # Keep the workflow running for a specified time
-          # For production, you'd deploy to a persistent server
-          tail -f ngrok.log
-
-      - name: Cleanup
-        if: always()
-        run: |
-          docker-compose down
-          pkill ngrok || true
