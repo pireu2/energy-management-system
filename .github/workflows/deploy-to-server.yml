@@ -1,0 +1,94 @@
+name: Deploy to Remote Server with Ngrok
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to server via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # Navigate to project directory
+            cd ${{ secrets.DEPLOY_PATH }}
+
+            # Pull latest changes
+            git pull origin main
+
+            # Stop existing services
+            docker-compose down
+
+            # Rebuild and start services
+            docker-compose up -d --build
+
+            # Wait for services to be ready
+            sleep 30
+
+            # Check if ngrok is running
+            if ! pgrep -x "ngrok" > /dev/null; then
+              echo "Starting ngrok..."
+              
+              # Kill any existing ngrok tmux session
+              tmux kill-session -t ngrok 2>/dev/null || true
+              
+              # Start ngrok in tmux
+              tmux new-session -d -s ngrok "ngrok http 8080"
+              
+              sleep 5
+            fi
+
+            # Get ngrok URL
+            NGROK_URL=$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url')
+            echo "Ngrok URL: $NGROK_URL"
+
+            # Save URL to file for later use
+            echo "$NGROK_URL" > /tmp/ngrok_url.txt
+
+      - name: Get ngrok URL from server
+        uses: appleboy/ssh-action@v1.0.0
+        id: get-url
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cat /tmp/ngrok_url.txt
+
+      - name: Update Vercel environment variables
+        if: env.VERCEL_TOKEN != ''
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          # Install Vercel CLI
+          npm i -g vercel
+
+          # Read ngrok URL (from previous step output)
+          NGROK_URL="${{ steps.get-url.outputs.stdout }}"
+
+          # Update API URL
+          vercel env rm VITE_API_URL production --yes --token=${{ secrets.VERCEL_TOKEN }} || true
+          echo "$NGROK_URL" | vercel env add VITE_API_URL production --token=${{ secrets.VERCEL_TOKEN }}
+
+          # Update WebSocket URL
+          vercel env rm VITE_WS_URL production --yes --token=${{ secrets.VERCEL_TOKEN }} || true
+          echo "${NGROK_URL/https/wss}/ws" | vercel env add VITE_WS_URL production --token=${{ secrets.VERCEL_TOKEN }}
+
+          # Trigger Vercel redeployment
+          cd frontend
+          vercel --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Notify deployment status
+        run: |
+          echo "✅ Deployment completed successfully!"
+          echo "🌐 Backend URL: ${{ steps.get-url.outputs.stdout }}"

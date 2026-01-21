@@ -1,0 +1,110 @@
+name: Deploy with Ngrok Tunnel
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+env:
+  NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
+  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+jobs:
+  deploy-backend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Create .env file
+        run: |
+          echo "Creating environment variables..."
+          # Add any required env vars here
+
+      - name: Build Docker images
+        run: |
+          docker-compose build
+
+      - name: Start services
+        run: |
+          docker-compose up -d
+          sleep 30  # Wait for services to be ready
+
+      - name: Check service health
+        run: |
+          echo "Checking service health..."
+          curl -f http://localhost:8080/health || exit 1
+
+      - name: Install ngrok
+        run: |
+          curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null
+          echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list
+          sudo apt update && sudo apt install ngrok
+
+      - name: Configure ngrok
+        run: |
+          ngrok config add-authtoken ${{ secrets.NGROK_AUTHTOKEN }}
+
+      - name: Start ngrok tunnel
+        run: |
+          nohup ngrok http 8080 --log=stdout > ngrok.log 2>&1 &
+          sleep 5
+
+      - name: Get ngrok URL
+        id: ngrok-url
+        run: |
+          # Wait for ngrok to be ready
+          for i in {1..10}; do
+            NGROK_URL=$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url')
+            if [ "$NGROK_URL" != "null" ] && [ -n "$NGROK_URL" ]; then
+              echo "Ngrok URL: $NGROK_URL"
+              echo "url=$NGROK_URL" >> $GITHUB_OUTPUT
+              break
+            fi
+            sleep 2
+          done
+
+      - name: Update Vercel environment variables
+        if: env.VERCEL_TOKEN != ''
+        run: |
+          NGROK_URL="${{ steps.ngrok-url.outputs.url }}"
+
+          # Install Vercel CLI
+          npm i -g vercel
+
+          # Update environment variables
+          vercel env rm VITE_API_URL production --yes --token=${{ secrets.VERCEL_TOKEN }}
+          echo "$NGROK_URL" | vercel env add VITE_API_URL production --token=${{ secrets.VERCEL_TOKEN }}
+
+          vercel env rm VITE_WS_URL production --yes --token=${{ secrets.VERCEL_TOKEN }}
+          echo "${NGROK_URL/https/wss}/ws" | vercel env add VITE_WS_URL production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Trigger Vercel deployment
+        if: env.VERCEL_TOKEN != ''
+        run: |
+          cd frontend
+          vercel --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Display ngrok URL
+        run: |
+          echo "🚀 Backend is accessible at: ${{ steps.ngrok-url.outputs.url }}"
+          echo "📊 Ngrok dashboard: http://localhost:4040"
+
+      - name: Keep ngrok running
+        run: |
+          echo "Keeping ngrok tunnel active..."
+          # Keep the workflow running for a specified time
+          # For production, you'd deploy to a persistent server
+          tail -f ngrok.log
+
+      - name: Cleanup
+        if: always()
+        run: |
+          docker-compose down
+          pkill ngrok || true
