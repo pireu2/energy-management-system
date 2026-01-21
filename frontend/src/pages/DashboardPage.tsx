@@ -20,7 +20,6 @@ import {
   MdDashboard,
 } from "react-icons/md";
 import { Link } from "react-router-dom";
-import { apiFetch } from "../lib/api";
 
 interface DashboardStats {
   totalDevices: number;
@@ -56,7 +55,7 @@ export const DashboardPage: React.FC = () => {
       if (devicesResponse.ok) {
         const devices = await devicesResponse.json();
         const assignedDevices = devices.filter(
-          (device: any) => device.assignedUserId
+          (device: any) => device.assignedUserId,
         ).length;
 
         setStats((prev) => ({
