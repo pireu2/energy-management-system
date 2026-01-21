@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { apiFetch } from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
 import { config } from "../config/env";
 import {
@@ -68,7 +69,7 @@ export const EnergyMonitoringPage: React.FC = () => {
 
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await fetch(
+      const response = await apiFetch(
         `${config.apiUrl}/api/monitoring/users/${user.id}/consumption?date=${selectedDate}`,
         {
           headers: {

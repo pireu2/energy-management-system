@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { apiFetch } from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
 import { config } from "../config/env";
 import { Button } from "../components/ui/button";
@@ -54,7 +55,7 @@ export const UsersPage: React.FC = () => {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await fetch(`${config.apiUrl}/api/users`, {
+      const response = await apiFetch(`${config.apiUrl}/api/users`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -90,7 +91,7 @@ export const UsersPage: React.FC = () => {
         ? `${config.apiUrl}/api/users/${editingUser.id}`
         : `${config.apiUrl}/api/users`;
 
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method: editingUser ? "PUT" : "POST",
         headers: {
           "Content-Type": "application/json",
@@ -123,7 +124,7 @@ export const UsersPage: React.FC = () => {
 
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await fetch(`${config.apiUrl}/api/users/${userId}`, {
+      const response = await apiFetch(`${config.apiUrl}/api/users/${userId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,

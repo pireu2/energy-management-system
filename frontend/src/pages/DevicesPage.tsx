@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { apiFetch } from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
 import { config } from "../config/env";
 import { Button } from "../components/ui/button";
@@ -75,7 +76,7 @@ export const DevicesPage: React.FC = () => {
   const fetchDevices = async () => {
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await fetch(`${config.apiUrl}/api/devices`, {
+      const response = await apiFetch(`${config.apiUrl}/api/devices`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -97,7 +98,7 @@ export const DevicesPage: React.FC = () => {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await fetch(`${config.apiUrl}/api/users`, {
+      const response = await apiFetch(`${config.apiUrl}/api/users`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -135,7 +136,7 @@ export const DevicesPage: React.FC = () => {
         ? `${config.apiUrl}/api/devices/${editingDevice.id}`
         : `${config.apiUrl}/api/devices`;
 
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method: editingDevice ? "PUT" : "POST",
         headers: {
           "Content-Type": "application/json",
@@ -163,7 +164,7 @@ export const DevicesPage: React.FC = () => {
 
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await fetch(`${config.apiUrl}/api/devices/${deviceId}`, {
+      const response = await apiFetch(`${config.apiUrl}/api/devices/${deviceId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -187,7 +188,7 @@ export const DevicesPage: React.FC = () => {
       let response;
 
       if (userId) {
-        response = await fetch(
+        response = await apiFetch(
           `${config.apiUrl}/api/devices/${deviceId}/assign/${userId}`,
           {
             method: "POST",
@@ -197,7 +198,7 @@ export const DevicesPage: React.FC = () => {
           }
         );
       } else {
-        response = await fetch(
+        response = await apiFetch(
           `${config.apiUrl}/api/devices/${deviceId}/assign`,
           {
             method: "DELETE",

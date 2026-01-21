@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { apiFetch } from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -120,7 +121,7 @@ export const ChatWidget: React.FC = () => {
     const fetchAdmins = async () => {
       try {
         const token = localStorage.getItem("accessToken");
-        const response = await fetch(`${config.apiUrl}/api/users`, {
+        const response = await apiFetch(`${config.apiUrl}/api/users`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (response.ok) {
@@ -142,7 +143,7 @@ export const ChatWidget: React.FC = () => {
     if (user?.role !== "admin") return;
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await fetch(`${config.apiUrl}/api/chat/admin/requests`, {
+      const response = await apiFetch(`${config.apiUrl}/api/chat/admin/requests`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.ok) {
@@ -287,7 +288,7 @@ export const ChatWidget: React.FC = () => {
   ): Promise<ChatMessage[]> => {
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await fetch(
+      const response = await apiFetch(
         `${config.apiUrl}/api/chat/sessions/${sessionId}/messages`,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -309,7 +310,7 @@ export const ChatWidget: React.FC = () => {
   ) => {
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await fetch(`${config.apiUrl}/api/chat/session`, {
+      const response = await apiFetch(`${config.apiUrl}/api/chat/session`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -410,7 +411,7 @@ export const ChatWidget: React.FC = () => {
         }
       }
 
-      const response = await fetch(
+      const response = await apiFetch(
         `${config.apiUrl}/api/chat/session/${currentSession.id}/message`,
         {
           method: "POST",
@@ -458,7 +459,7 @@ export const ChatWidget: React.FC = () => {
     setInputMessage("");
 
     try {
-      const response = await fetch(`${config.apiUrl}/api/chat/admin/reply`, {
+      const response = await apiFetch(`${config.apiUrl}/api/chat/admin/reply`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -481,7 +482,7 @@ export const ChatWidget: React.FC = () => {
   const loadSessionMessages = async (sessionId: number) => {
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await fetch(
+      const response = await apiFetch(
         `${config.apiUrl}/api/chat/sessions/${sessionId}/messages`,
         {
           headers: { Authorization: `Bearer ${token}` },

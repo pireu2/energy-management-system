@@ -6,6 +6,7 @@ import React, {
   type ReactNode,
 } from "react";
 import { config } from "../config/env";
+import { apiFetch } from "../lib/api";
 
 interface User {
   id?: number;
@@ -21,7 +22,7 @@ interface AuthContextType {
     password: string,
     firstName: string,
     lastName: string,
-    role: "admin" | "client"
+    role: "admin" | "client",
   ) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
@@ -56,7 +57,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const validateToken = async (token: string) => {
     try {
-      const response = await fetch(`${config.apiUrl}/api/auth/validate`, {
+      const response = await apiFetch(`${config.apiUrl}/api/auth/validate`, {
         mode: "cors",
         credentials: "omit",
         headers: {
@@ -86,7 +87,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await fetch(`${config.apiUrl}/api/auth/login`, {
+      const response = await apiFetch(`${config.apiUrl}/api/auth/login`, {
         method: "POST",
         mode: "cors",
         credentials: "omit",
@@ -119,10 +120,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     password: string,
     firstName: string,
     lastName: string,
-    role: "admin" | "client"
+    role: "admin" | "client",
   ) => {
     try {
-      const response = await fetch(`${config.apiUrl}/api/auth/register`, {
+      const response = await apiFetch(`${config.apiUrl}/api/auth/register`, {
         method: "POST",
         mode: "cors",
         credentials: "omit",
@@ -154,7 +155,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const refreshToken = localStorage.getItem("refreshToken");
       if (refreshToken) {
-        await fetch(`${config.apiUrl}/api/auth/logout`, {
+        await apiFetch(`${config.apiUrl}/api/auth/logout`, {
           method: "POST",
           mode: "cors",
           credentials: "omit",
