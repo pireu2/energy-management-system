@@ -1,6 +1,5 @@
 import "reflect-metadata"; // Must be first import for TypeORM
 import express from "express";
-import cors from "cors";
 import dotenv from "dotenv";
 import initializeDatabase from "./config/init";
 import userRoutes from "./routes/userRoutes";
@@ -11,7 +10,7 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors());
+// CORS is handled by API Gateway (nginx)
 app.use(express.json());
 
 app.use("/users", userRoutes);

@@ -1,5 +1,4 @@
 import express, { Request, Response } from "express";
-import cors from "cors";
 import jwt from "jsonwebtoken";
 import { findRuleMatch, getAllRules } from "./rules/chatRules";
 import { getAIResponse, isAIEnabled } from "./services/aiService";
@@ -7,7 +6,7 @@ import { connectRabbitMQ, publishToQueue, QUEUES } from "./config/rabbitmq";
 import { pool, testConnection, initializeDatabase } from "./config/database";
 
 const app = express();
-app.use(cors());
+// CORS is handled by API Gateway (nginx)
 app.use(express.json());
 
 const JWT_SECRET =

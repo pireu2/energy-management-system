@@ -1,5 +1,4 @@
 import express from "express";
-import cors from "cors";
 import { testConnection } from "./config/database";
 import { connectRabbitMQ, getDeviceId } from "./config/rabbitmq";
 import {
@@ -14,8 +13,7 @@ const PORT = process.env.PORT || 3005;
 const DEVICE_SERVICE_URL =
   process.env.DEVICE_SERVICE_URL || "http://device-service:3003/devices";
 
-// Middleware
-app.use(cors());
+// Middleware - CORS is handled by API Gateway (nginx)
 app.use(express.json());
 
 // Routes

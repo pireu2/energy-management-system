@@ -1,6 +1,5 @@
 import "reflect-metadata";
 import express, { Request, Response } from "express";
-import cors from "cors";
 import dotenv from "dotenv";
 import { AppDataSource } from "./config/database";
 import deviceRoutes from "./routes/deviceRoutes";
@@ -13,7 +12,7 @@ const app = express();
 const PORT = process.env.PORT || 3003;
 const mirroredUserRepository = new MirroredUserRepository();
 
-app.use(cors());
+// CORS is handled by API Gateway (nginx)
 app.use(express.json());
 
 app.use("/devices", deviceRoutes);
