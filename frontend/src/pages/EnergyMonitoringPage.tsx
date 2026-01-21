@@ -47,7 +47,7 @@ interface ChartData {
 export const EnergyMonitoringPage: React.FC = () => {
   const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState<string>(
-    new Date().toISOString().split("T")[0]
+    new Date().toISOString().split("T")[0],
   );
   const [chartType, setChartType] = useState<"line" | "bar">("line");
   const [chartData, setChartData] = useState<ChartData[]>([]);
@@ -69,14 +69,16 @@ export const EnergyMonitoringPage: React.FC = () => {
 
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await apiFetch(
-        `${config.apiUrl}/api/monitoring/users/${user.id}/consumption?date=${selectedDate}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+      const url = new URL(
+        `${config.apiUrl}/api/monitoring/users/${user.id}/consumption`,
       );
+      url.searchParams.append("date", selectedDate);
+
+      const response = await apiFetch(url.toString(), {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!response.ok) {
         throw new Error("Failed to fetch energy data");
@@ -231,7 +233,7 @@ export const EnergyMonitoringPage: React.FC = () => {
             <div className="text-2xl font-bold text-orange-600">
               {chartData.length > 0
                 ? chartData.reduce((max, curr) =>
-                    curr.consumption > max.consumption ? curr : max
+                    curr.consumption > max.consumption ? curr : max,
                   ).hour
                 : "N/A"}
             </div>
