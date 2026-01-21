@@ -50,7 +50,6 @@ app.post(
       const user = req.user!;
       const { targetAdminId, chatMode } = req.body;
 
-      // Check for existing active session with the same parameters
       let existingSession = null;
       if (chatMode === "bot") {
         // Look for existing bot session for this user
@@ -58,7 +57,7 @@ app.post(
           `SELECT * FROM chat_sessions 
            WHERE user_id = $1 AND session_type = 'bot' AND status != 'closed'
            ORDER BY updated_at DESC LIMIT 1`,
-          [user.userId]
+          [user.userId],
         );
         if (result.rows.length > 0) {
           existingSession = result.rows[0];
@@ -69,7 +68,7 @@ app.post(
           `SELECT * FROM chat_sessions 
            WHERE user_id = $1 AND admin_id = $2 AND session_type = 'admin' AND status != 'closed'
            ORDER BY updated_at DESC LIMIT 1`,
-          [user.userId, targetAdminId]
+          [user.userId, targetAdminId],
         );
         if (result.rows.length > 0) {
           existingSession = result.rows[0];
@@ -93,7 +92,7 @@ app.post(
           chatMode === "admin" ? "waiting_admin" : "active",
           targetAdminId || null,
           chatMode || "bot",
-        ]
+        ],
       );
 
       res.json({
@@ -104,7 +103,7 @@ app.post(
       console.error("Create session error:", error);
       res.status(500).json({ error: "Failed to create session" });
     }
-  }
+  },
 );
 
 app.post(
@@ -122,7 +121,7 @@ app.post(
 
       const session = await pool.query(
         "SELECT * FROM chat_sessions WHERE id = $1",
-        [sessionId]
+        [sessionId],
       );
 
       if (session.rows.length === 0) {
@@ -137,7 +136,7 @@ app.post(
 
       await pool.query(
         "INSERT INTO chat_messages (session_id, user_id, sender_type, message) VALUES ($1, $2, $3, $4)",
-        [sessionId, user.userId, "user", message]
+        [sessionId, user.userId, "user", message],
       );
 
       if (
@@ -162,7 +161,7 @@ app.post(
 
         await pool.query(
           "UPDATE chat_sessions SET updated_at = NOW() WHERE id = $1",
-          [sessionId]
+          [sessionId],
         );
 
         return res.json({
@@ -190,12 +189,12 @@ app.post(
 
       const botMessageResult = await pool.query(
         "INSERT INTO chat_messages (session_id, user_id, sender_type, message, response_type) VALUES ($1, $2, $3, $4, $5) RETURNING *",
-        [sessionId, user.userId, "bot", responseText, responseType]
+        [sessionId, user.userId, "bot", responseText, responseType],
       );
 
       await pool.query(
         "UPDATE chat_sessions SET updated_at = NOW() WHERE id = $1",
-        [sessionId]
+        [sessionId],
       );
 
       // No need to send notification for bot responses - user gets response via HTTP
@@ -209,7 +208,7 @@ app.post(
       console.error("Chat message error:", error);
       res.status(500).json({ error: "Failed to process message" });
     }
-  }
+  },
 );
 
 app.post(
@@ -223,7 +222,7 @@ app.post(
 
       const session = await pool.query(
         "SELECT * FROM chat_sessions WHERE id = $1 AND user_id = $2",
-        [sessionId, user.userId]
+        [sessionId, user.userId],
       );
 
       if (session.rows.length === 0) {
@@ -237,7 +236,7 @@ app.post(
           mode === "admin" ? "waiting_admin" : "active",
           targetAdminId || null,
           sessionId,
-        ]
+        ],
       );
 
       if (mode === "admin" && targetAdminId) {
@@ -261,7 +260,7 @@ app.post(
       console.error("Switch mode error:", error);
       res.status(500).json({ error: "Failed to switch mode" });
     }
-  }
+  },
 );
 
 app.post(
@@ -274,7 +273,7 @@ app.post(
 
       const session = await pool.query(
         "SELECT * FROM chat_sessions WHERE id = $1",
-        [sessionId]
+        [sessionId],
       );
 
       if (session.rows.length === 0) {
@@ -287,7 +286,7 @@ app.post(
 
       await pool.query(
         "UPDATE chat_sessions SET status = $1, updated_at = NOW() WHERE id = $2",
-        ["waiting_admin", sessionId]
+        ["waiting_admin", sessionId],
       );
 
       // Notify admins
@@ -307,7 +306,7 @@ app.post(
       console.error("Request admin error:", error);
       res.status(500).json({ error: "Failed to request admin" });
     }
-  }
+  },
 );
 
 app.post(
@@ -326,14 +325,14 @@ app.post(
       if (!currentSessionId) {
         const sessionResult = await pool.query(
           "INSERT INTO chat_sessions (user_id, user_email) VALUES ($1, $2) RETURNING id",
-          [user.userId, user.email]
+          [user.userId, user.email],
         );
         currentSessionId = sessionResult.rows[0].id;
       }
 
       await pool.query(
         "INSERT INTO chat_messages (session_id, user_id, sender_type, message) VALUES ($1, $2, $3, $4)",
-        [currentSessionId, user.userId, "user", message]
+        [currentSessionId, user.userId, "user", message],
       );
 
       let response: string;
@@ -354,7 +353,7 @@ app.post(
 
       await pool.query(
         "INSERT INTO chat_messages (session_id, user_id, sender_type, message, response_type) VALUES ($1, $2, $3, $4, $5)",
-        [currentSessionId, user.userId, "bot", response, responseType]
+        [currentSessionId, user.userId, "bot", response, responseType],
       );
 
       // No need to send notification - user gets response via HTTP
@@ -369,7 +368,7 @@ app.post(
       console.error("Chat message error:", error);
       res.status(500).json({ error: "Failed to process message" });
     }
-  }
+  },
 );
 
 app.post(
@@ -392,7 +391,7 @@ app.post(
 
       const session = await pool.query(
         "SELECT * FROM chat_sessions WHERE id = $1",
-        [sessionId]
+        [sessionId],
       );
 
       if (session.rows.length === 0) {
@@ -403,12 +402,12 @@ app.post(
 
       const adminMessageResult = await pool.query(
         "INSERT INTO chat_messages (session_id, user_id, sender_type, message, response_type) VALUES ($1, $2, $3, $4, $5) RETURNING *",
-        [sessionId, admin.userId, "admin", message, "admin"]
+        [sessionId, admin.userId, "admin", message, "admin"],
       );
 
       await pool.query(
         "UPDATE chat_sessions SET status = $1, admin_id = $2, updated_at = NOW() WHERE id = $3",
-        ["active", admin.userId, sessionId]
+        ["active", admin.userId, sessionId],
       );
 
       await publishToQueue(QUEUES.NOTIFICATIONS, {
@@ -433,7 +432,7 @@ app.post(
       console.error("Admin reply error:", error);
       res.status(500).json({ error: "Failed to send reply" });
     }
-  }
+  },
 );
 
 app.get(
@@ -455,7 +454,7 @@ app.get(
          WHERE (cs.admin_id = $1 OR (cs.status = 'waiting_admin' AND cs.admin_id IS NULL))
          AND cs.session_type = 'admin'
          ORDER BY cs.updated_at DESC`,
-        [admin.userId]
+        [admin.userId],
       );
 
       res.json(sessions.rows);
@@ -463,7 +462,7 @@ app.get(
       console.error("Get admin requests error:", error);
       res.status(500).json({ error: "Failed to get requests" });
     }
-  }
+  },
 );
 
 app.get(
@@ -476,12 +475,12 @@ app.get(
 
       if (user.role === "admin") {
         sessions = await pool.query(
-          "SELECT * FROM chat_sessions ORDER BY updated_at DESC LIMIT 50"
+          "SELECT * FROM chat_sessions ORDER BY updated_at DESC LIMIT 50",
         );
       } else {
         sessions = await pool.query(
           "SELECT * FROM chat_sessions WHERE user_id = $1 ORDER BY updated_at DESC",
-          [user.userId]
+          [user.userId],
         );
       }
 
@@ -490,7 +489,7 @@ app.get(
       console.error("Get sessions error:", error);
       res.status(500).json({ error: "Failed to get sessions" });
     }
-  }
+  },
 );
 
 app.get(
@@ -503,7 +502,7 @@ app.get(
 
       const session = await pool.query(
         "SELECT * FROM chat_sessions WHERE id = $1",
-        [sessionId]
+        [sessionId],
       );
 
       if (session.rows.length === 0) {
@@ -516,7 +515,7 @@ app.get(
 
       const messages = await pool.query(
         "SELECT * FROM chat_messages WHERE session_id = $1 ORDER BY created_at ASC",
-        [sessionId]
+        [sessionId],
       );
 
       res.json(messages.rows);
@@ -524,7 +523,7 @@ app.get(
       console.error("Get messages error:", error);
       res.status(500).json({ error: "Failed to get messages" });
     }
-  }
+  },
 );
 
 app.get("/chat/rules", (req: Request, res: Response) => {

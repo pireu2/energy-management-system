@@ -103,7 +103,7 @@ export const DashboardPage: React.FC = () => {
       <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-lg p-6 text-white">
         <div className="flex items-center gap-3 mb-2">
           <MdDashboard className="text-2xl" />
-          <h2 className="text-3xl font-bold">AAA</h2>
+          <h2 className="text-3xl font-bold">BBB</h2>
         </div>
         <p className="text-blue-100">
           Welcome back, {user?.email}! Here's an overview of your energy
